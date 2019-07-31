@@ -7,11 +7,14 @@
     "dev": "nodemon ./bin/www"
   },
   "dependencies": {
+    "bcrypt": "^3.0.6",
     "cookie-parser": "~1.4.3",
     "debug": "~2.6.9",
     "dotenv": "^8.0.0",
     "express": "~4.16.0",
+    "express-jwt": "^5.3.1",
     "express-validator": "^6.1.1",
+    "jsonwebtoken": "^8.5.1",
     "mongoose": "^5.6.6",
     "morgan": "~1.9.0"
   },
