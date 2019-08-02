@@ -38,4 +38,10 @@ app.all("*", function(req, res) {
     return apiResponse.notFoundResponse(res, 'Page not found');
 });
 
+app.use((err, req, res, next) => {
+  if(err.name == "UnauthorizedError"){
+    return apiResponse.unauthorizedResponse(res, err.message);
+  }
+});
+
 module.exports = app;
