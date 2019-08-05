@@ -5,7 +5,9 @@ const apiResponse = require('../helpers/apiResponse');
 const auth = require('../middlewares/jwt');
 var moment = require('moment');
 var mongoose = require('mongoose');
+mongoose.set('useFindAndModify', false);
 
+// Book Schema
 function BookData(data) {
     this.title= data.title;
     this.description = data.description;
@@ -39,6 +41,8 @@ exports.bookList = [
 /**
  * Book Detail.
  * 
+ * @param {string}      id
+ * 
  * @returns {Object}
  */
 exports.bookDetail = [
@@ -64,7 +68,7 @@ exports.bookDetail = [
 ];
 
 /**
- * Store book.
+ * Book store.
  * 
  * @param {string}      title 
  * @param {string}      description
@@ -76,7 +80,7 @@ exports.bookStore = [
     auth,
     body('title', 'Title must not be empty.').isLength({ min: 1 }).trim(),
     body('description', 'Description must not be empty.').isLength({ min: 1 }).trim(),
-    body('isbn', 'ISBN must not be empty').isLength({ min: 1 }).trim().custom(value => {
+    body('isbn', 'ISBN must not be empty').isLength({ min: 1 }).trim().custom((value,{req}) => {
         return Book.findOne({isbn : value,user: req.user._id}).then(book => {
           if (book) {
             return Promise.reject('Book already exist with this ISBN no.');
@@ -113,7 +117,7 @@ exports.bookStore = [
 ];
 
 /**
- * Store book.
+ * Book update.
  * 
  * @param {string}      title 
  * @param {string}      description
@@ -125,7 +129,13 @@ exports.bookUpdate = [
     auth,
     body('title', 'Title must not be empty.').isLength({ min: 1 }).trim(),
     body('description', 'Description must not be empty.').isLength({ min: 1 }).trim(),
-    body('isbn', 'ISBN must not be empty').isLength({ min: 1 }).trim(),
+    body('isbn', 'ISBN must not be empty').isLength({ min: 1 }).trim().custom((value,{req}) => {
+        return Book.findOne({isbn : value,user: req.user._id, _id: { "$ne": req.params.id }}).then(book => {
+          if (book) {
+            return Promise.reject('Book already exist with this ISBN no.');
+          }
+        });
+      }),
     sanitizeBody('*').escape(),
     (req, res, next) => {
         try {
@@ -143,25 +153,69 @@ exports.bookUpdate = [
             else {
                 if(!mongoose.Types.ObjectId.isValid(req.params.id)){
                     return apiResponse.validationErrorWithData(res, 'Invalid Error.', "Invalid ID");
+                }else{
+                    Book.findById(req.params.id, function (err, foundBook) {
+                        if(foundBook === null){
+                            return apiResponse.notFoundResponse(res,"Book not exists with this id");
+                        }else{
+                            //Check authorized user
+                            if(foundBook.user.toString() !== req.user._id){
+                                return apiResponse.unauthorizedResponse(res, 'You are not authorized to do this operation.');
+                            }else{
+                                //update book.
+                                Book.findByIdAndUpdate(req.params.id, book, {},function (err) {
+                                    if (err) { 
+                                        return apiResponse.ErrorResponse(res, err); 
+                                    }else{
+                                        let bookData = new BookData(book);
+                                        return apiResponse.successResponseWithData(res,'Book update Success.', bookData);
+                                    }
+                                });
+                            }
+                        }
+                    });
                 }
-                Book.findOne({isbn : req.body.isbn,user: req.user._id, _id: { "$ne": req.params.id }}).then(book => {
-                  if (book) {
-                    return apiResponse.validationErrorWithData(res, 'Validation Error.', "Book already exist with this ISBN no.");
-                  }
-                });
-                //Check authorized user
-                Book.findById(req.params.id, function (err, book) {
-                    if(book.user.toString() !== req.user._id){
-                        return apiResponse.unauthorizedResponse(res, 'You are not authorized to do this operation.');
-                    }
-                });
-                //Save book.
-                Book.findByIdAndUpdate(req.params.id, book, {},function (err) {
-                    if (err) { return apiResponse.ErrorResponse(res, err); }
-                    let bookData = new BookData(book);
-                    return apiResponse.successResponseWithData(res,'Book update Success.', bookData);
-                });
             }
+        } catch (err) {
+            //throw error in json response with status 500. 
+            return apiResponse.ErrorResponse(res, err);
+        }
+    }
+];
+
+/**
+ * Book Delete.
+ * 
+ * @param {string}      id
+ * 
+ * @returns {Object}
+ */
+exports.bookDelete = [
+    auth,
+    function (req, res) {
+        if(!mongoose.Types.ObjectId.isValid(req.params.id)){
+            return apiResponse.validationErrorWithData(res, 'Invalid Error.', "Invalid ID");
+        }
+        try {
+            Book.findById(req.params.id, function (err, foundBook) {
+                if(foundBook === null){
+                    return apiResponse.notFoundResponse(res,"Book not exists with this id");
+                }else{
+                    //Check authorized user
+                    if(foundBook.user.toString() !== req.user._id){
+                        return apiResponse.unauthorizedResponse(res, 'You are not authorized to do this operation.');
+                    }else{
+                        //delete book.
+                        Book.findByIdAndRemove(req.params.id,function (err) {
+                            if (err) { 
+                                return apiResponse.ErrorResponse(res, err); 
+                            }else{
+                                return apiResponse.successResponse(res,'Book delete Success.');
+                            }
+                        });
+                    }
+                }
+            });
         } catch (err) {
             //throw error in json response with status 500. 
             return apiResponse.ErrorResponse(res, err);
