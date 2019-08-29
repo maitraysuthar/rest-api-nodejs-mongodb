@@ -6,6 +6,7 @@ require('dotenv').config()
 var indexRouter = require('./routes/index');
 var apiRouter = require('./routes/api');
 var apiResponse = require('./helpers/apiResponse');
+var cors = require('cors');
 
 // DB connection
 var MONGODB_URL = process.env.MONGODB_URL;
@@ -28,6 +29,9 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+
+//To allow cross-origin requests
+app.use(cors());
 
 //Route Prefixes
 app.use('/', indexRouter);
