@@ -3,6 +3,7 @@ const { body,validationResult } = require("express-validator");
 const { sanitizeBody } = require("express-validator");
 //helper file to prepare responses.
 const apiResponse = require("../helpers/apiResponse");
+const utility = require("../helpers/utility");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const mailer = require("../helpers/mailer");
@@ -50,7 +51,7 @@ exports.register = [
             //hash input password
             bcrypt.hash(req.body.password,10,function(err, hash) {
                 // generate OTP for confirmation
-                let otp = randomNumber(4);
+                let otp = utility.randomNumber(4);
                 // Create User object with escaped and trimmed data
                 var user = new UserModel(
                     {
@@ -158,23 +159,6 @@ exports.login = [
 }];
 
 /**
- * OTP generator.
- *
- * @param {intiger}      length
- *
- * @returns {Interger}
- */
-function randomNumber(length) {
-    var text = "";
-    var possible = "123456789";
-    for (var i = 0; i < length; i++) {
-      var sup = Math.floor(Math.random() * possible.length);
-      text += i > 0 && sup == i ? "0" : possible.charAt(sup);
-    }
-    return Number(text);
-}
-
-/**
  * Verify Confirm otp.
  *
  * @param {string}      email
@@ -197,17 +181,75 @@ exports.verifyConfirm = [
             var query = {email : req.body.email};
             UserModel.findOne(query).then(user => {
                 if (user) {
-                    //Compare given password with db's hash.
-                   if(user.isConfirmed){
+                    //Check already confirm or not.
+                   if(!user.isConfirmed){
                         //Check account confirmation.
                         if(user.confirmOTP == req.body.otp){
-                            UserModel.findOneAndUpdate(query, { 
-                                name: 'jason bourne' 
-                            }, options, callback)
-                            return apiResponse.successResponseWithData(res,"Login Success.", userData);
+                            //Update user as confirmed
+                            UserModel.findOneAndUpdate(query, {
+                                isConfirmed: 1,
+                                confirmOTP: null 
+                            }).catch(err => {
+                                return apiResponse.ErrorResponse(res, err);
+                            });
+                            return apiResponse.successResponse(res,"Account confirmed success.");
                         }else{
                             return apiResponse.unauthorizedResponse(res, "Otp does not match");
                         }
+                    }else{
+                        return apiResponse.unauthorizedResponse(res, "Account already confirmed.");
+                    }
+                }else{
+                    return apiResponse.unauthorizedResponse(res, "Specified email not found.");
+                }
+            });
+        }
+    } catch (err) {
+        return apiResponse.ErrorResponse(res, err);
+    }
+}];
+
+/**
+ * Resend Confirm otp.
+ *
+ * @param {string}      email
+ *
+ * @returns {Object}
+ */
+exports.resendConfirmOtp = [
+    body("email").isLength({ min: 1 }).trim().withMessage("Email must be specified.")
+        .isEmail().withMessage("Email must be a valid email address."),
+    sanitizeBody("email").escape(),
+    (req, res, next) => {
+    try {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return apiResponse.validationErrorWithData(res, "Validation Error.", errors.array());
+        }else {
+            var query = {email : req.body.email};
+            UserModel.findOne(query).then(user => {
+                if (user) {
+                    //Check already confirm or not.
+                   if(!user.isConfirmed){
+                        // Generate otp
+                        let otp = utility.randomNumber(4);
+                        // Html email body
+                        let html = '<p>Please Confirm your Account.</p><p>OTP: '+otp+'</p>';
+                        // Send confirmation email
+                        mailer.send(
+                            constants.confirmEmails.from, 
+                            req.body.email,
+                            'Confirm Account',
+                            html
+                        ).then(function(response){
+                            user.isConfirmed = 0;
+                            user.confirmOTP = otp;
+                            // Save user.
+                            user.save(function (err) {
+                                if (err) { return apiResponse.ErrorResponse(res, err); }
+                                return apiResponse.successResponse(res,"Confirm otp sent.");
+                            });
+                        });
                     }else{
                         return apiResponse.unauthorizedResponse(res, "Account already confirmed.");
                     }

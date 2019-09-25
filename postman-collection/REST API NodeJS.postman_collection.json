@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "2dc87226-1700-456c-8c91-134be87d7283",
+		"_postman_id": "b59237a7-b99e-401e-b0c6-39203c202949",
 		"name": "REST API NodeJS",
 		"description": "A boilerplate for REST API Development with Node.js and Expressjs",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -47,7 +47,7 @@
 							]
 						},
 						"url": {
-							"raw": "http://localhost:3000/api/auth/register",
+							"raw": "http://localhost:3000/api/auth/register?=",
 							"protocol": "http",
 							"host": [
 								"localhost"
@@ -106,6 +106,87 @@
 								"api",
 								"auth",
 								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Verify Confirm OTP",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/x-www-form-urlencoded",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "email",
+									"value": "mjsuthar@yopmail.com",
+									"type": "text"
+								},
+								{
+									"key": "otp",
+									"value": "6442",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://localhost:3000/api/auth/verify-otp",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"auth",
+								"verify-otp"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Resend Confirm OTP",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/x-www-form-urlencoded",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "email",
+									"value": "maitraysuthar@gmail.com",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://localhost:3000/api/auth/resend-verify-otp",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"auth",
+								"resend-verify-otp"
 							]
 						}
 					},
