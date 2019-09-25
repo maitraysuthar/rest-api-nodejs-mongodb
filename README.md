@@ -11,6 +11,8 @@ This project will run on **NodeJs** using **MongoDB** as database. I had tried t
 ## Features
 
 -   Basic Authentication (Register/Login with hashed password)
+-   Account confirmation with 4 (Changeable) digit OTP.
+-   Email helper ready just import and use.
 -   JWT Tokens, make requests with a token after login with `Authorization` header with value `Bearer yourToken` where `yourToken` will be returned in Login response.
 -   Pre-defined response structures with proper status codes.
 -   Included CORS.
@@ -51,7 +53,7 @@ npm update
 1.  You will find a file named `.env.example` on root directory of project.
 2.  Create a new file by copying and pasting the file and then renaming it to just `.env`
 3.  The file `.env` is already ignored, so you never commit your credentials.
-4.  Change the values of the file to your environment.
+4.  Change the values of the file to your environment. Helpful comments added to `.env.example` file to understand the constants.
 
 ## How to run
 
