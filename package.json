@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "start": "node ./bin/www",
-    "dev": "nodemon ./bin/www"
+    "dev": "nodemon ./bin/www",
+    "test": "mocha --timeout 10000"
   },
   "dependencies": {
     "bcrypt": "^3.0.6",
@@ -22,6 +23,9 @@
     "nodemailer": "^6.3.0"
   },
   "devDependencies": {
+    "chai": "^4.2.0",
+    "chai-http": "^4.3.0",
+    "mocha": "^6.2.1",
     "nodemon": "^1.19.1"
   }
 }
