@@ -1,5 +1,7 @@
 # Nodejs Expressjs MongoDB Ready-to-use API Project Structure
 A ready-to-use boilerplate for REST API Development with Node.js, Express, and MongoDB
+[![Author](http://img.shields.io/badge/author-@maitraysuthar-blue.svg)](https://www.linkedin.com/in/maitray-suthar/) [![GitHub license](https://img.shields.io/github/license/maitraysuthar/rest-api-nodejs-mongodb.svg)](https://github.com/maitraysuthar/rest-api-nodejs-mongodb/blob/master/LICENSE)  ![GitHub repo size](https://img.shields.io/github/repo-size/maitraysuthar/rest-api-nodejs-mongodb) ![Travis (.com)](https://img.shields.io/travis/com/maitraysuthar/rest-api-nodejs-mongodb)
+
 
 ## Getting started
 
@@ -54,6 +56,7 @@ npm update
 2.  Create a new file by copying and pasting the file and then renaming it to just `.env`
 3.  The file `.env` is already ignored, so you never commit your credentials.
 4.  Change the values of the file to your environment. Helpful comments added to `.env.example` file to understand the constants.
+5.  Test cases with [Mocha](https://mochajs.org/) and [Chai](https://www.chaijs.com/).
 
 ## How to run
 
@@ -84,6 +87,20 @@ If you need to add more routes to the project just create a new file in `/routes
 ### Creating new controllers
 
 If you need to add more controllers to the project just create a new file in `/controllers/` and use them in the routes.
+
+## Tests
+
+### Running  Test Cases
+
+```bash
+npm test
+```
+
+You can set custom command for test at `package.json` file inside `scripts` property. You can also change timeout for each assertion with `--timeout` parameter of mocha command.
+
+### Creating new tests
+
+If you need to add more test cases to the project just create a new file in `/test/` and run the command.
 
 ## Bugs or improvements
 
