@@ -1,15 +1,25 @@
 const { chai, server, should } = require('./testConfig');
 const UserModel = require("../models/UserModel");
 
-//Our parent block
+/**
+ * Test cases to test all the authentication APIs
+ * Covered Routes:
+ * (1) Login
+ * (2) Register
+ * (3) Resend Confirm OTP
+ * (4) Verify Confirm OTP
+ */
+
 describe('Auth', () => {
   
-  before((done) => { //Before each test we empty the database
+  // Before each test we empty the database
+  before((done) => { 
       UserModel.deleteMany({}, (err) => { 
          done();           
       });        
   });
 
+  // Prepare data for testing
   const testData = {
     "firstName":"test",
     "lastName":"testing",
@@ -132,7 +142,7 @@ describe('Auth', () => {
   * Test the /POST route
   */
   describe('/POST Login', () => {
-    it('it should Send failed user Login', (done) => {
+    it('it should do user Login', (done) => {
       chai.request(server)
           .post('/api/auth/login')
           .send({"email": testData.email,"password": testData.password})
