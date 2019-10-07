@@ -1,6 +1,7 @@
 # Nodejs Expressjs MongoDB Ready-to-use API Project Structure
-A ready-to-use boilerplate for REST API Development with Node.js, Express, and MongoDB
 [![Author](http://img.shields.io/badge/author-@maitraysuthar-blue.svg)](https://www.linkedin.com/in/maitray-suthar/) [![GitHub license](https://img.shields.io/github/license/maitraysuthar/rest-api-nodejs-mongodb.svg)](https://github.com/maitraysuthar/rest-api-nodejs-mongodb/blob/master/LICENSE)  ![GitHub repo size](https://img.shields.io/github/repo-size/maitraysuthar/rest-api-nodejs-mongodb) ![Travis (.com)](https://img.shields.io/travis/com/maitraysuthar/rest-api-nodejs-mongodb)
+
+A ready-to-use boilerplate for REST API Development with Node.js, Express, and MongoDB
 
 
 ## Getting started
