@@ -23,6 +23,7 @@ This project will run on **NodeJs** using **MongoDB** as database. I had tried t
 -   Validations added. 
 -   Included API collection for Postman.
 -   Light-weight project.
+-   Test cases with [Mocha](https://mochajs.org/) and [Chai](https://www.chaijs.com/).
 
 ## Software Requirements
 
@@ -57,7 +58,6 @@ npm update
 2.  Create a new file by copying and pasting the file and then renaming it to just `.env`
 3.  The file `.env` is already ignored, so you never commit your credentials.
 4.  Change the values of the file to your environment. Helpful comments added to `.env.example` file to understand the constants.
-5.  Test cases with [Mocha](https://mochajs.org/) and [Chai](https://www.chaijs.com/).
 
 ## How to run
 
