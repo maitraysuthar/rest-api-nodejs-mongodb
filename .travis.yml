@@ -12,12 +12,5 @@ services:
   - mongodb
 before_script:
   - cp .env.example .env
-env:
-  - NODE_ENV=test
-  - MONGODB_URL=mongodb://127.0.0.1:27017/rest-api-nodejs-mongodb
 os:
-  - windows
   - linux
-  - osx
-
-sudo: false
