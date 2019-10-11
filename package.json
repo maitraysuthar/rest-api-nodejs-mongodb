@@ -5,7 +5,8 @@
   "scripts": {
     "start": "node ./bin/www",
     "dev": "nodemon ./bin/www",
-    "test": "nyc mocha --timeout 10000 --exit"
+    "test": "nyc mocha --timeout 10000 --exit",
+    "lint": "eslint --fix --config .eslintrc.json \"**/*.js\""
   },
   "dependencies": {
     "bcrypt": "^3.0.6",
@@ -25,6 +26,7 @@
   "devDependencies": {
     "chai": "^4.2.0",
     "chai-http": "^4.3.0",
+    "eslint": "^6.5.1",
     "mocha": "^6.2.1",
     "nodemon": "^1.19.1",
     "nyc": "^14.1.1"
