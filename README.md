@@ -1,5 +1,5 @@
 # Nodejs Expressjs MongoDB Ready-to-use API Project Structure
-[![Author](http://img.shields.io/badge/author-@maitraysuthar-blue.svg)](https://www.linkedin.com/in/maitray-suthar/) [![GitHub license](https://img.shields.io/github/license/maitraysuthar/rest-api-nodejs-mongodb.svg)](https://github.com/maitraysuthar/rest-api-nodejs-mongodb/blob/master/LICENSE)  ![GitHub repo size](https://img.shields.io/github/repo-size/maitraysuthar/rest-api-nodejs-mongodb) ![Travis (.com)](https://img.shields.io/travis/com/maitraysuthar/rest-api-nodejs-mongodb)
+[![Author](http://img.shields.io/badge/author-@maitraysuthar-blue.svg)](https://www.linkedin.com/in/maitray-suthar/) [![GitHub license](https://img.shields.io/github/license/maitraysuthar/rest-api-nodejs-mongodb.svg)](https://github.com/maitraysuthar/rest-api-nodejs-mongodb/blob/master/LICENSE)  ![GitHub repo size](https://img.shields.io/github/repo-size/maitraysuthar/rest-api-nodejs-mongodb) [![Codacy Badge](https://api.codacy.com/project/badge/Coverage/b3eb80984adc4671988ffb22d6ad83df)](https://www.codacy.com/manual/maitraysuthar/rest-api-nodejs-mongodb?utm_source=github.com&utm_medium=referral&utm_content=maitraysuthar/rest-api-nodejs-mongodb&utm_campaign=Badge_Coverage) [![Codacy Badge](https://api.codacy.com/project/badge/Grade/b3eb80984adc4671988ffb22d6ad83df)](https://www.codacy.com/manual/maitraysuthar/rest-api-nodejs-mongodb?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=maitraysuthar/rest-api-nodejs-mongodb&amp;utm_campaign=Badge_Grade) ![Travis (.com)](https://img.shields.io/travis/com/maitraysuthar/rest-api-nodejs-mongodb)
 
 A ready-to-use boilerplate for REST API Development with Node.js, Express, and MongoDB
 
@@ -11,6 +11,16 @@ This is a basic API skeleton written in JavaScript ES2015. Very useful to buildi
 
 This project will run on **NodeJs** using **MongoDB** as database. I had tried to maintain the code structure easy as any beginner can also adopt the flow and start building an API. Project is open for suggestions, Bug reports and pull requests. 
 
+## Advertise for Job/Work Contract
+
+I am looking for a good job or work contract. You can contact me directly on my email ([maitraysuthar@gmail.com](mailto:maitraysuthar@gmail.com "maitraysuthar@gmail.com")) or you can download my CV from my personal  [website](https://maitraysuthar.github.io/portfolio/). Looking forward. Thanks :smile:
+
+## Buy me a Coffee
+
+If you consider my project as a helpful stuff, You can appriciate me or my hard work and time spent to create this helpful structure with buying a coffee for me. I would be very thankful if you buy me a coffee, Please buy me a coffee :smile:.
+
+<a href="https://www.buymeacoffee.com/36GgOoQ2f" target="_blank"><img src="https://bmc-cdn.nyc3.digitaloceanspaces.com/BMC-button-images/custom_images/orange_img.png" alt="Buy Me A Coffee" style="height: auto !important;width: auto !important;" ></a>
+
 ## Features
 
 -   Basic Authentication (Register/Login with hashed password)
@@ -20,15 +30,19 @@ This project will run on **NodeJs** using **MongoDB** as database. I had tried t
 -   Pre-defined response structures with proper status codes.
 -   Included CORS.
 -    **Book** example with **CRUD** operations.
--   Validations added. 
+-   Validations added.
 -   Included API collection for Postman.
 -   Light-weight project.
 -   Test cases with [Mocha](https://mochajs.org/) and [Chai](https://www.chaijs.com/).
+-   Code coverage with [Istanbuljs (nyc)](https://istanbul.js.org/).
+-   Included CI (Continuas Integration) with [Travis CI](https://travis-ci.org).
+-   Linting with [Eslint](https://eslint.org/).
 
 ## Software Requirements
 
--   Node.js **10+**
+-   Node.js **8+**
 -   MongoDB **3.6+** (Recommended **4+**)
+
 ## How to install
 
 ### Using Git (recommended)
@@ -102,6 +116,16 @@ You can set custom command for test at `package.json` file inside `scripts` prop
 ### Creating new tests
 
 If you need to add more test cases to the project just create a new file in `/test/` and run the command.
+
+## ESLint
+
+### Running  Eslint
+
+```bash
+npm run lint
+```
+
+You can set custom rules for eslint in `.eslintrc.json` file, Added at project root.
 
 ## Bugs or improvements
 
