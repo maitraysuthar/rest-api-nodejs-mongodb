@@ -17,7 +17,7 @@ I am looking for a good job or work contract. You can contact me directly on my 
 
 ## Buy me a Coffee
 
-If you consider my project as a helpful stuff, You can appriciate me or my hard work and time spent to create this helpful structure with buying a coffee for me. I would be very thankful if you buy me a coffee, Please buy me a coffee :smile:.
+If you consider my project as helpful stuff, You can appreciate me or my hard work and time spent to create this helpful structure with buying a coffee for me. I would be very thankful if you buy me a coffee, please buy me a coffee :smile:.
 
 <a href="https://www.buymeacoffee.com/36GgOoQ2f" target="_blank"><img src="https://bmc-cdn.nyc3.digitaloceanspaces.com/BMC-button-images/custom_images/orange_img.png" alt="Buy Me A Coffee" style="height: auto !important;width: auto !important;" ></a>
 
@@ -35,7 +35,7 @@ If you consider my project as a helpful stuff, You can appriciate me or my hard 
 -   Light-weight project.
 -   Test cases with [Mocha](https://mochajs.org/) and [Chai](https://www.chaijs.com/).
 -   Code coverage with [Istanbuljs (nyc)](https://istanbul.js.org/).
--   Included CI (Continuas Integration) with [Travis CI](https://travis-ci.org).
+-   Included CI (Continuous Integration) with [Travis CI](https://travis-ci.org).
 -   Linting with [Eslint](https://eslint.org/).
 
 ## Software Requirements
@@ -63,16 +63,50 @@ git clone https://github.com/maitraysuthar/rest-api-nodejs-mongodb.git ./myproje
 ```bash
 cd myproject
 npm install
-npm update
 ```
 
 ### Setting up environments
 
 1.  You will find a file named `.env.example` on root directory of project.
 2.  Create a new file by copying and pasting the file and then renaming it to just `.env`
+    ```bash
+    cp .env.example .env
+    ```
 3.  The file `.env` is already ignored, so you never commit your credentials.
 4.  Change the values of the file to your environment. Helpful comments added to `.env.example` file to understand the constants.
-
+## Project  structure
+```sh
+.
+├── app.js
+├── package.json
+├── bin
+│   └── www
+├── controllers
+│   ├── AuthController.js
+│   └── BookController.js
+├── models
+│   ├── BookModel.js
+│   └── UserModel.js
+├── routes
+│   ├── api.js
+│   ├── auth.js
+│   └── book.js
+├── middlewares
+│   ├── jwt.js
+├── helpers
+│   ├── apiResponse.js
+│   ├── constants.js
+│   ├── mailer.js
+│   └── utility.js
+├── test
+│   ├── testConfig.js
+│   ├── auth.js
+│   └── book.js
+└── public
+    ├── index.html
+    └── stylesheets
+        └── style.css
+```
 ## How to run
 
 ### Running  API server locally
