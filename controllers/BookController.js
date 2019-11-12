@@ -27,7 +27,7 @@ exports.bookList = [
 				if(books.length > 0){
 					return apiResponse.successResponseWithData(res, "Operation success", books);
 				}else{
-					return apiResponse.successResponseWithData(res, "Operation success", {});
+					return apiResponse.successResponseWithData(res, "Operation success", []);
 				}
 			});
 		} catch (err) {
