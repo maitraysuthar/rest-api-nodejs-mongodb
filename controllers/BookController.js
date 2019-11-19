@@ -8,6 +8,7 @@ mongoose.set("useFindAndModify", false);
 
 // Book Schema
 function BookData(data) {
+	this.id = data._id;
 	this.title= data.title;
 	this.description = data.description;
 	this.isbn = data.isbn;
@@ -23,7 +24,7 @@ exports.bookList = [
 	auth,
 	function (req, res) {
 		try {
-			Book.find({user: req.user._id},"title description isbn createdAt").then((books)=>{
+			Book.find({user: req.user._id},"_id title description isbn createdAt").then((books)=>{
 				if(books.length > 0){
 					return apiResponse.successResponseWithData(res, "Operation success", books);
 				}else{
@@ -51,7 +52,7 @@ exports.bookDetail = [
 			return apiResponse.successResponseWithData(res, "Operation success", {});
 		}
 		try {
-			Book.findOne({_id: req.params.id,user: req.user._id},"title description isbn createdAt").then((book)=>{                
+			Book.findOne({_id: req.params.id,user: req.user._id},"_id title description isbn createdAt").then((book)=>{                
 				if(book !== null){
 					let bookData = new BookData(book);
 					return apiResponse.successResponseWithData(res, "Operation success", bookData);
