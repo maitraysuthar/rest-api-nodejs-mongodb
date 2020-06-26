@@ -13,7 +13,7 @@ This project will run on **NodeJs** using **MongoDB** as database. I had tried t
 
 ## Some Great Stuff
 
-<a href="https://tracking.gitads.io/?campaign=gitads&repo=rest-api-nodejs-mongodb&redirect=gitads.io" target="_blank"><img src="https://maitraysuthar.github.io/portfolio/images/720X300-2.png" alt="Some Great Stuff" style="height: auto !important;width: auto !important;" ></a>
+<a href="https://tracking.gitads.io/?campaign=gitads&repo=rest-api-nodejs-mongodb&redirect=gitads.io" target="_blank"><img src="https://images.gitads.io/rest-api-nodejs-mongodb" alt="Some Great Stuff" style="height: auto !important;width: auto !important;" ></a>
 
 ## Advertise for Job/Work Contract
 
