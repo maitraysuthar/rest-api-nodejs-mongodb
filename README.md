@@ -127,13 +127,13 @@ Press CTRL + C to stop the process.
 
 ## Running as Docker container
 
- 1. Build its image:
+1.  Build its image:
 
 ```bash
 sudo docker build -t rest-api-nodejs-mongodb:0.0.1 -f build/package/Dockerfile .
 ```
 
- 2. Run it as a container:
+2.  Run it as a container:
 
 ```bash
 sudo docker run -it -e MONGODB_URL=mongodb://127.0.0.1:27017/rest-api-nodejs-mongodb -e JWT_SECRET=abc1235 -e JWT_TIMEOUT_DURATION="2 hours"  --net host api:0.0.1
