@@ -63,9 +63,9 @@ exports.register = [
 							firstName: user.firstName,
 							lastName: user.lastName,
 							email: user.email
-							};
-							return apiResponse.successResponseWithData(res,"Registration Success.", userData);
-						});
+						};
+						return apiResponse.successResponseWithData(res,"Registration Success.", userData);
+					});
 				});
 			}
 		} catch (err) {
