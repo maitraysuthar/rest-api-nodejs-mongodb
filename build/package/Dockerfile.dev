@@ -7,4 +7,4 @@ RUN npm install
 
 RUN cp .env.example .env
 
-ENTRYPOINT ["npm"]
+ENTRYPOINT ["npm", "run", "dev"]
