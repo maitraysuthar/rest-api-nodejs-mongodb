@@ -7,6 +7,5 @@ var app = express();
 
 app.use("/auth/", authRouter);
 app.use("/book/", bookRouter);
-app.use("/device/", deviceRouter);
 
 module.exports = app;
