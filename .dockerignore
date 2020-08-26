@@ -1,0 +1,15 @@
+# Directories
+public
+test
+.github
+build
+postman-collection
+
+# Files
+.gitignore
+.travis.yml
+.eslintrc.json
+LICENSE
+package-lock.json
+README.md
+CODE_OF_CONDUCT.md
