@@ -9,7 +9,12 @@ A ready-to-use boilerplate for REST API Development with Node.js, Express, and M
 
 This is a basic API skeleton written in JavaScript ES2015. Very useful to building a RESTful web APIs for your front-end platforms like Android, iOS or JavaScript frameworks (Angular, Reactjs, etc).
 
-This project will run on **NodeJs** using **MongoDB** as database. I had tried to maintain the code structure easy as any beginner can also adopt the flow and start building an API. Project is open for suggestions, Bug reports and pull requests. 
+This project will run on **NodeJs** using **MongoDB** as database. I had tried to maintain the code structure easy as any beginner can also adopt the flow and start building an API. Project is open for suggestions, Bug reports and pull requests.
+
+## Some Great Stuff
+
+<a href="https://tracking.gitads.io/?campaign=gitads&repo=rest-api-nodejs-mongodb&redirect=gitads.io" target="_blank"><img src="https://images.gitads.io/rest-api-nodejs-mongodb" alt="Some Great Stuff" style="height: auto !important;width: auto !important;" ></a>
+<br><i>This advert was placed by <a href="https://tracking.gitads.io/?campaign=gitads&repo=rest-api-nodejs-mongodb&redirect=gitads.io" rel="gitads">GitAds</a> </i>
 
 ## Advertise for Job/Work Contract
 
