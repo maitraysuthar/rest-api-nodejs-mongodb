@@ -50,7 +50,7 @@ app.all("*", function(req, res) {
 
 app.use((err, req, res) => {
 	if(err.name == "UnauthorizedError"){
-		return apiResponse.unauthorizedResponse(res, err.message);
+		apiResponse.unauthorizedResponse(res, err.message);
 	}
 });
 
