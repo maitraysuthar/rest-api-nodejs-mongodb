@@ -1,4 +1,4 @@
-const { chai, server, should } = require("./testConfig");
+const { chai, server } = require("./testConfig");
 const BookModel = require("../models/BookModel");
 
 /**
@@ -16,6 +16,7 @@ describe("Book", () => {
 	//Before each test we empty the database
 	before((done) => { 
 		BookModel.deleteMany({}, (err) => { 
+			console.log(err)
 			done();           
 		});        
 	});

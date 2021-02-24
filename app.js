@@ -23,7 +23,7 @@ mongoose.connect(MONGODB_URL, { useNewUrlParser: true, useUnifiedTopology: true 
 		console.error("App starting error:", err.message);
 		process.exit(1);
 	});
-var db = mongoose.connection;
+// var db = mongoose.connection;
 
 var app = express();
 
