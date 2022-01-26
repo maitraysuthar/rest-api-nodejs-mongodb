@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 const { chai, server, should } = require("./testConfig");
 const UserModel = require("../models/UserModel");
 
@@ -16,7 +17,7 @@ describe("Auth", () => {
 	before((done) => { 
 		UserModel.deleteMany({}, (err) => { 
 			done();           
-		});        
+		});
 	});
 
 	// Prepare data for testing
@@ -35,7 +36,7 @@ describe("Auth", () => {
 			chai.request(server)
 				.post("/api/auth/register")
 				.send({"email": testData.email})
-				.end((err, res) => {
+				.end((_err, res) => {
 					res.should.have.status(400);
 					done();
 				});
@@ -50,7 +51,7 @@ describe("Auth", () => {
 			chai.request(server)
 				.post("/api/auth/register")
 				.send(testData)
-				.end((err, res) => {
+				.end((_err, res) => {
 					res.should.have.status(200);
 					res.body.should.have.property("message").eql("Registration Success.");
 					testData._id = res.body.data._id;
@@ -67,7 +68,7 @@ describe("Auth", () => {
 			chai.request(server)
 				.post("/api/auth/login")
 				.send({"email": testData.email,"password": testData.password})
-				.end((err, res) => {
+				.end((_err, res) => {
 					res.should.have.status(401);
 					res.body.should.have.property("message").eql("Account is not confirmed. Please confirm your account.");
 					done();
@@ -83,7 +84,7 @@ describe("Auth", () => {
 			chai.request(server)
 				.post("/api/auth/resend-verify-otp")
 				.send({"email": testData.email})
-				.end((err, res) => {
+				.end((_err, res) => {
 					res.should.have.status(200);
 					UserModel.findOne({_id: testData._id},"confirmOTP").then((user)=>{                
 						testData.confirmOTP = user.confirmOTP;
@@ -101,7 +102,7 @@ describe("Auth", () => {
 			chai.request(server)
 				.post("/api/auth/verify-otp")
 				.send({"email": testData.email, "otp": testData.confirmOTP})
-				.end((err, res) => {
+				.end((_err, res) => {
 					res.should.have.status(200);
 					done();
 				});
@@ -116,7 +117,7 @@ describe("Auth", () => {
 			chai.request(server)
 				.post("/api/auth/login")
 				.send({"email": testData.email})
-				.end((err, res) => {
+				.end((_err, res) => {
 					res.should.have.status(400);
 					done();
 				});
@@ -131,7 +132,7 @@ describe("Auth", () => {
 			chai.request(server)
 				.post("/api/auth/login")
 				.send({"email": "admin@admin.com","password": "1234"})
-				.end((err, res) => {
+				.end((_err, res) => {
 					res.should.have.status(401);
 					done();
 				});
@@ -146,7 +147,7 @@ describe("Auth", () => {
 			chai.request(server)
 				.post("/api/auth/login")
 				.send({"email": testData.email,"password": testData.password})
-				.end((err, res) => {
+				.end((_err, res) => {
 					res.should.have.status(200);
 					res.body.should.have.property("message").eql("Login Success.");
 					done();
