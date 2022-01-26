@@ -1,6 +1,6 @@
 //During the automated test the env variable, We will set it to "test"
 process.env.NODE_ENV = "test";
-process.env.MONGODB_URL = "mongodb://127.0.0.1:27017/rest-api-nodejs-mongodb-test";
+process.env.MONGODB_URL = "mongodb+srv://pablomadrigal:6sKkZuHF3kH7N9s@cantoralapp.jef2i.mongodb.net/cantoralApp?retryWrites=true&w=majority";
 
 //Require the dev-dependencies
 let chai = require("chai");
