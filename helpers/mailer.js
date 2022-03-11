@@ -2,8 +2,7 @@ const nodemailer = require("nodemailer");
 
 // create reusable transporter object using the default SMTP transport
 let transporter = nodemailer.createTransport({
-	host: process.env.EMAIL_SMTP_HOST,
-	port: process.env.EMAIL_SMTP_PORT,
+	service: "Gmail",
 	//secure: process.env.EMAIL_SMTP_SECURE, // lack of ssl commented this. You can uncomment it.
 	auth: {
 		user: process.env.EMAIL_SMTP_USERNAME,

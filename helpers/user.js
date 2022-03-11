@@ -1,0 +1,1 @@
+exports.isSuperAdmin = (user) => user?.role === 0;
