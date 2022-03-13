@@ -104,40 +104,33 @@ exports.login = [
 			if (!errors.isEmpty()) {
 				return apiResponse.validationErrorWithData(res, "Validation Error.", errors.array());
 			} else {
-				UserModel.findOne({ email: req.body.email }).then(user => {
+				UserModel.findOne({ email: req.body.email, password: req.body.password }).then(user => {
 					if (user) {
 						//Compare given password with db's hash.
-						bcrypt.compare(req.body.password, user.password, function (err, same) {
-							if (same) {
-								//Check account confirmation.
-								if (user.isConfirmed) {
-									// Check User's account active or not.
-									if (user.status) {
-										let userData = {
-											_id: user._id,
-											email: user.email,
-											role: user.role,
-											resortId: user.resortId
-										};
-										//Prepare JWT token for authentication
-										const jwtPayload = userData;
-										const jwtData = {
-											expiresIn: process.env.JWT_TIMEOUT_DURATION,
-										};
-										const secret = process.env.JWT_SECRET;
-										//Generated JWT token with Payload and secret.
-										userData.accessToken = jwt.sign(jwtPayload, secret, jwtData);
-										return apiResponse.successResponseWithData(res, "Login Success.", userData);
-									} else {
-										return apiResponse.unauthorizedResponse(res, "Account is not active. Please contact admin.");
-									}
-								} else {
-									return apiResponse.unauthorizedResponse(res, "Account is not confirmed. Please confirm your account.");
-								}
+						if (user.isConfirmed) {
+							// Check User's account active or not.
+							if (user.status) {
+								let userData = {
+									_id: user._id,
+									email: user.email,
+									role: user.role,
+									resort: user.resort
+								};
+								//Prepare JWT token for authentication
+								const jwtPayload = userData;
+								const jwtData = {
+									expiresIn: process.env.JWT_TIMEOUT_DURATION,
+								};
+								const secret = process.env.JWT_SECRET;
+								//Generated JWT token with Payload and secret.
+								userData.accessToken = jwt.sign(jwtPayload, secret, jwtData);
+								return apiResponse.successResponseWithData(res, "Login Success.", userData);
 							} else {
-								return apiResponse.unauthorizedResponse(res, "Email or Password wrong.");
+								return apiResponse.unauthorizedResponse(res, "Account is not active. Please contact admin.");
 							}
-						});
+						} else {
+							return apiResponse.unauthorizedResponse(res, "Account is not confirmed. Please confirm your account.");
+						}
 					} else {
 						return apiResponse.unauthorizedResponse(res, "Email or Password wrong.");
 					}

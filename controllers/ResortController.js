@@ -1,17 +1,16 @@
 const Resort = require("../models/ResortModel");
-const { body, validationResult } = require("express-validator");
-const { sanitizeBody } = require("express-validator");
-var mongoose = require("mongoose");
+const { validationResult } = require("express-validator");
 
 const apiResponse = require("../helpers/apiResponse");
 const auth = require("../middlewares/jwt");
-const { authSuperAdmin } = require("../middlewares/superAdmin");
+const { authSuperAdmin } = require("../middlewares/role");
 
 // Book Schema
 function ResortData(data) {
     this.id = data._id;
     this.name = data.name;
     this.description = data.description;
+    this.status = data.status;
 }
 
 /**
@@ -23,10 +22,10 @@ exports.resortList = [
     auth,
     function (req, res) {
         try {
-            let isSuperAdmin = req.user == 0;
-            Resort.find(isSuperAdmin ? {} : { _id: { $in: req.user.resortId } }, "_id title description isbn createdAt").then((books) => {
-                if (books.length > 0) {
-                    return apiResponse.successResponseWithData(res, "Operation success", books);
+            let isSuperAdmin = req.user?.role == 0;
+            Resort.find(isSuperAdmin ? {} : { _id: { $in: req.user.resortId } }, "_id name address status").then((resorts) => {
+                if (resorts.length > 0) {
+                    return apiResponse.successResponseWithData(res, "Operation success", resorts);
                 } else {
                     return apiResponse.successResponseWithData(res, "Operation success", []);
                 }
@@ -60,6 +59,77 @@ exports.resortStore = [
                 return apiResponse.successResponseWithData(res, "Resort add Success.", bookData);
             });
 
+        } catch (err) {
+            //throw error in json response with status 500. 
+            return apiResponse.ErrorResponse(res, err);
+        }
+    }
+]
+
+exports.resortDelete = [
+    auth,
+    authSuperAdmin,
+    function (req, res) {
+        try {
+            const errors = validationResult(req);
+            if (!errors.isEmpty()) {
+                return apiResponse.validationErrorWithData(res, "Validation Error.", errors.array());
+            }
+            Resort.findById(req.params.id, (err, resort) => {
+                if (err) {
+                    return apiResponse.ErrorResponse(res, err);
+                }
+                if (!resort) {
+                    return apiResponse.notFoundResponse(res, "Resort not exists with this id");
+                }
+                Resort.findByIdAndUpdate(req.params.id, {
+                    status: 0
+                }, (error) => {
+                    if (error) {
+                        return apiResponse.ErrorResponse(res, error);
+                    }
+                    return apiResponse.successResponseWithData(res, "Resort delete Success.");
+                })
+            })
+        } catch (err) {
+            //throw error in json response with status 500. 
+            return apiResponse.ErrorResponse(res, err);
+        }
+    }
+]
+
+exports.resortUpdate = [
+    auth,
+    authSuperAdmin,
+    function (req, res) {
+        try {
+            const resort = new Resort({
+                _id: req.params.id,
+                name: req.body.name,
+                description: req.body.description,
+                status: req.body.status
+            })
+
+            const errors = validationResult(req);
+            if (!errors.isEmpty()) {
+                return apiResponse.validationErrorWithData(res, "Validation Error.", errors.array());
+            }
+
+            Resort.findById(req.params.id, (err, foundResort) => {
+                if (err) {
+                    return apiResponse.ErrorResponse(res, err);
+                }
+                if (!foundResort) {
+                    return apiResponse.notFoundResponse(res, "Resort not exists with this id");
+                }
+
+                Resort.findByIdAndUpdate(req.params.id, resort, {}, (error) => {
+                    if (error) {
+                        return apiResponse.ErrorResponse(res, error);
+                    }
+                    return apiResponse.successResponseWithData(res, "Resort update Success.");
+                })
+            })
         } catch (err) {
             //throw error in json response with status 500. 
             return apiResponse.ErrorResponse(res, err);

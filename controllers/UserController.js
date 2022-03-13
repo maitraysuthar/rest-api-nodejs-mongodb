@@ -5,14 +5,14 @@ var mongoose = require("mongoose");
 
 const User = require("../models/UserModel");
 const auth = require("../middlewares/jwt");
-const { authSuperAdmin } = require("../middlewares/superAdmin");
+const { authSuperAdmin } = require("../middlewares/role");
 const apiResponse = require("../helpers/apiResponse");
 
 exports.userList = [
 	auth,
 	authSuperAdmin,
 	(req, res) => {
-		User.find().populate("resort").then((users) => {
+		User.find({ role: { $ne: 0 } }).populate("resort").then((users) => {
 			if (users.length > 0) {
 				return apiResponse.successResponseWithData(res, "Operation success", users);
 			} else {
@@ -21,10 +21,35 @@ exports.userList = [
 		});
 	}
 ];
+
+exports.userStore = [
+	auth,
+	authSuperAdmin,
+	(req, res) => {
+		console.info(req.body)
+		const user = new User({
+			email: req.body.email,
+			password: req.body.password,
+			isConfirmed: 1,
+			confirmOTP: null,
+			resort: req.body?.resort?.split(',') || [],
+			role: req.body.role
+		})
+
+		user.save(function (err) {
+			if (err) { return apiResponse.ErrorResponse(res, err); }
+			let userData = {
+				_id: user._id,
+				email: user.email
+			};
+			return apiResponse.successResponseWithData(res, "Registration Success.", userData);
+		});
+	}
+];
+
 exports.userUpdate = [
 	auth,
 	authSuperAdmin,
-	body("resort", "Name must not be empty.").isLength({ min: 1 }).trim(),
 	sanitizeBody("*").escape(),
 	(req, res) => {
 		const errors = validationResult(req);
@@ -40,11 +65,11 @@ exports.userUpdate = [
 			if (foundUser === null) {
 				return apiResponse.notFoundResponse(res, "User not exists with this id");
 			} else {
-				let resort = req.body.resort.split(",").map(el => ({ _id: el }));
+				let user = {
+					status: req.body.status
+				}
 				//update resort for user.
-				User.findByIdAndUpdate(req.params.id, {
-					resort
-				}, function (err) {
+				User.findByIdAndUpdate(req.params.id, user, {}, function (err) {
 					if (err) {
 						return apiResponse.ErrorResponse(res, err);
 					} else {
