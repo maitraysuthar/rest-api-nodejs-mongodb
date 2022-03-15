@@ -129,9 +129,21 @@ exports.login = [
 									const secret = process.env.ACCESS_TOKEN_SECRET;
 									//Generated JWT token with Payload and secret.
 									userData.accessToken = jwt.sign(jwtPayload, secret, jwtData);
-
-									return apiResponse.successResponseWithData(res, "Login Success.", userData);
-
+									userData.refreshToken = jwt.sign(jwtPayload, secret, {
+										expiresIn: Number(process.env.REFRESH_TOKEN_LIFE),
+									});
+									RefreshToken.findOneAndUpdate({
+										user: user._id
+									}, {
+										token: userData.refreshToken
+									}, {
+										upsert: true,
+										new: true
+									}).then(() => {
+										return apiResponse.successResponseWithData(res, "Login Success.", userData);
+									}, (error) => {
+										return apiResponse.ErrorResponse(res, error);
+									});
 								} else {
 									return apiResponse.unauthorizedResponse(res, "Account is not active. Please contact admin.");
 								}
@@ -257,13 +269,11 @@ exports.resendConfirmOtp = [
 exports.logout = [
 	auth,
 	(req, res) => {
-		RefreshToken.findOne({ user: req.user._id }).then((foundRefreshToken) => {
-			RefreshToken.findByIdAndDelete(foundRefreshToken._id).then(() => {
-				return apiResponse.successResponse(res, "Logout success.");
-			});
-		}, ((err) => {
-			return apiResponse.ErrorResponse(res, err);
-		}));
+		RefreshToken.findOneAndDelete({ user: req.user._id }).then(() => {
+			return apiResponse.successResponse(res, "Logout success.");
+		},(error)=>{
+			return apiResponse.ErrorResponse(res, error);
+		});
 	}
 ];
 
