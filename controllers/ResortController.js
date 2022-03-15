@@ -4,6 +4,7 @@ const { validationResult } = require("express-validator");
 const apiResponse = require("../helpers/apiResponse");
 const auth = require("../middlewares/jwt");
 const { authSuperAdmin } = require("../middlewares/role");
+const { omitNullishObject } = require("../helpers/utility");
 
 // Book Schema
 function ResortData(data) {
@@ -23,7 +24,7 @@ exports.resortList = [
     function (req, res) {
         try {
             let isSuperAdmin = req.user?.role == 0;
-            Resort.find(isSuperAdmin ? {} : { _id: { $in: req.user.resortId } }, "_id name address status").then((resorts) => {
+            Resort.find(isSuperAdmin ? {} : { _id: { $in: req.user.resort } }).then((resorts) => {
                 if (resorts.length > 0) {
                     return apiResponse.successResponseWithData(res, "Operation success", resorts);
                 } else {
@@ -48,10 +49,17 @@ exports.resortStore = [
             }
 
             var resort = new Resort(
-                {
-                    name: req.body.name,
-                    description: req.body.description,
-                });
+                omitNullishObject(
+                    {
+                        name: req.body.name,
+                        address: req.body.address,
+                        description: req.body.description,
+                        phone: req.body.phone,
+                        rate: req.body.rate,
+                        status: req.body.status,
+                    }
+                )
+            );
 
             resort.save(function (err) {
                 if (err) { return apiResponse.ErrorResponse(res, err); }
@@ -106,8 +114,11 @@ exports.resortUpdate = [
             const resort = new Resort({
                 _id: req.params.id,
                 name: req.body.name,
+                address: req.body.address,
                 description: req.body.description,
-                status: req.body.status
+                phone: req.body.phone,
+                rate: req.body.rate,
+                status: req.body.status,
             })
 
             const errors = validationResult(req);

@@ -1,13 +1,16 @@
-const UserModel = require("../models/UserModel");
 const { body, validationResult } = require("express-validator");
 const { sanitizeBody } = require("express-validator");
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcrypt");
+
+const UserModel = require("../models/UserModel");
+const RefreshToken = require("../models/RefreshTokenModel");
 //helper file to prepare responses.
 const apiResponse = require("../helpers/apiResponse");
 const utility = require("../helpers/utility");
-const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
 const mailer = require("../helpers/mailer");
 const { constants } = require("../helpers/constants");
+const auth = require("../middlewares/jwt");
 
 /**
  * User registration.
@@ -104,33 +107,38 @@ exports.login = [
 			if (!errors.isEmpty()) {
 				return apiResponse.validationErrorWithData(res, "Validation Error.", errors.array());
 			} else {
-				UserModel.findOne({ email: req.body.email, password: req.body.password }).then(user => {
+				UserModel.findOne({ email: req.body.email }).then(user => {
 					if (user) {
 						//Compare given password with db's hash.
-						if (user.isConfirmed) {
-							// Check User's account active or not.
-							if (user.status) {
-								let userData = {
-									_id: user._id,
-									email: user.email,
-									role: user.role,
-									resort: user.resort
-								};
-								//Prepare JWT token for authentication
-								const jwtPayload = userData;
-								const jwtData = {
-									expiresIn: process.env.JWT_TIMEOUT_DURATION,
-								};
-								const secret = process.env.JWT_SECRET;
-								//Generated JWT token with Payload and secret.
-								userData.accessToken = jwt.sign(jwtPayload, secret, jwtData);
-								return apiResponse.successResponseWithData(res, "Login Success.", userData);
+						bcrypt.compare(req.body.password, user.password, function (err, same) {
+							if (!same) return apiResponse.unauthorizedResponse(res, "Email or Password wrong.");
+							if (user.isConfirmed) {
+								// Check User's account active or not.
+								if (user.status) {
+									let userData = {
+										email: user.email,
+										role: user.role,
+									};
+									//Prepare JWT token for authentication
+									const jwtPayload = { ...userData };
+									jwtPayload._id = user._id;
+									jwtPayload.resort = user.resort;
+									const jwtData = {
+										expiresIn: Number(process.env.ACCESS_TOKEN_LIFE),
+									};
+									const secret = process.env.ACCESS_TOKEN_SECRET;
+									//Generated JWT token with Payload and secret.
+									userData.accessToken = jwt.sign(jwtPayload, secret, jwtData);
+
+									return apiResponse.successResponseWithData(res, "Login Success.", userData);
+
+								} else {
+									return apiResponse.unauthorizedResponse(res, "Account is not active. Please contact admin.");
+								}
 							} else {
-								return apiResponse.unauthorizedResponse(res, "Account is not active. Please contact admin.");
+								return apiResponse.unauthorizedResponse(res, "Account is not confirmed. Please confirm your account.");
 							}
-						} else {
-							return apiResponse.unauthorizedResponse(res, "Account is not confirmed. Please confirm your account.");
-						}
+						});
 					} else {
 						return apiResponse.unauthorizedResponse(res, "Email or Password wrong.");
 					}
@@ -245,3 +253,40 @@ exports.resendConfirmOtp = [
 			return apiResponse.ErrorResponse(res, err);
 		}
 	}];
+
+exports.logout = [
+	auth,
+	(req, res) => {
+		RefreshToken.findOne({ user: req.user._id }).then((foundRefreshToken) => {
+			RefreshToken.findByIdAndDelete(foundRefreshToken._id).then(() => {
+				return apiResponse.successResponse(res, "Logout success.");
+			});
+		}, ((err) => {
+			return apiResponse.ErrorResponse(res, err);
+		}));
+	}
+];
+
+exports.refreshToken = [
+	auth,
+	(req, res) => {
+		const jwtPayload = req.user;
+		let refreshToken = jwt.sign(
+			jwtPayload,
+			process.env.REFRESH_TOKEN_SECRET,
+			{
+				algorithm: "HS256",
+				expiresIn: Number(process.env.REFRESH_TOKEN_LIFE)
+			}
+		);
+		RefreshToken.findOne({ user: req.user._id }).then((foundRefreshToken) => {
+			RefreshToken.findByIdAndUpdate(foundRefreshToken._id, {
+				token: refreshToken
+			}).then(() => {
+				return apiResponse.successResponse(res, "Refresh token success.");
+			});
+		}, ((err) => {
+			return apiResponse.ErrorResponse(res, err);
+		}));
+	}
+];
