@@ -1,6 +1,5 @@
 
 const { body, validationResult } = require("express-validator");
-const { sanitizeBody } = require("express-validator");
 var mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 
@@ -9,6 +8,7 @@ const auth = require("../middlewares/jwt");
 const { authSuperAdmin } = require("../middlewares/role");
 const apiResponse = require("../helpers/apiResponse");
 const { generatePassword } = require("../helpers/user");
+const { omitNullishObject } = require('../helpers/utility')
 const mailer = require("../helpers/mailer");
 const { constants } = require("../helpers/constants");
 
@@ -77,7 +77,6 @@ exports.userStore = [
 exports.userUpdate = [
 	auth,
 	authSuperAdmin,
-	sanitizeBody("*").escape(),
 	(req, res) => {
 		const errors = validationResult(req);
 
@@ -92,9 +91,11 @@ exports.userUpdate = [
 			if (foundUser === null) {
 				return apiResponse.notFoundResponse(res, "User not exists with this id");
 			} else {
-				let user = {
+				let user = omitNullishObject({
+					role: Number(req.body.role) || null,
+					resort: req.body.resort,
 					status: req.body.status
-				}
+				})
 				//update resort for user.
 				User.findByIdAndUpdate(req.params.id, user, {}, function (err) {
 					if (err) {
