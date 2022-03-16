@@ -1,4 +1,6 @@
-const { pickBy, isNil, negate, fp } = require("lodash");
+const { pickBy, isNil, negate } = require("lodash");
+const fs = require("fs");
+
 /**
  * Random OTP
  * @param {*} length 
@@ -19,3 +21,14 @@ exports.randomNumber = function (length) {
  * @returns Object
  */
 exports.omitNullishObject = (value) => pickBy(value, negate(isNil));
+
+exports.deleteFiles = (files, callback) => {
+	try {
+		files.forEach(path => fs.existsSync(path) && fs.unlinkSync(path));
+		callback(null);
+		// success code here
+	} catch (err) {
+		// error handling here
+		callback(err);
+	}
+};

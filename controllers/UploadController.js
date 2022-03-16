@@ -55,10 +55,8 @@ const remove = [
 		const path = "./" + req.query.path;
 		fs.unlink(path, (err) => {
 			if (err) {
-				console.log("failed to delete local image:" + err);
-				return apiResponse.ErrorResponse(res, err);
+				return apiResponse.successResponseWithData(res, "File remove not exist.");
 			} else {
-				console.log("successfully deleted local image");
 				return apiResponse.successResponseWithData(res, "File remove Success.", { path });
 			}
 		});
@@ -68,5 +66,6 @@ const remove = [
 module.exports = {
 	create,
 	update,
-	remove
+	remove,
+	upload
 };

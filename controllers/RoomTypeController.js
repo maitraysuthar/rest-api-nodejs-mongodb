@@ -5,7 +5,9 @@ const { authAdmin } = require("../middlewares/role");
 const apiResponse = require("../helpers/apiResponse");
 const RoomType = require("../models/RoomTypeModel");
 const { isSuperAdmin } = require("../helpers/user");
-const { omitNullishObject } = require('../helpers/utility')
+const { omitNullishObject, deleteFiles } = require('../helpers/utility')
+const { upload } = require('../controllers/UploadController')
+
 function RoomTypeData(data) {
     return {
         id: data._id,
@@ -17,17 +19,18 @@ function RoomTypeData(data) {
 exports.roomTypeStore = [
     auth,
     authAdmin,
+    upload.array("files", 5),
     (req, res) => {
         const roomType = new RoomType(omitNullishObject({
             name: req.body.name,
-            resort: req.body?.resort || undefined,
+            resort: req.body?.resort?.split(',') || undefined,
             quantity: req.body.quantity,
             price: req.body.price,
             maxAdult: req.body.maxAdult,
             maxChildren: req.body.maxChildren,
             allowCrypto: !!req.body.allowCrypto,
             capacity: req.body.quantity,
-            imgs: req.body?.imgs || undefined,
+            imgs: req?.files?.map(f => f.path),
             description: req.body?.description
         }));
         roomType.save(function (err) {
@@ -60,11 +63,12 @@ exports.roomTypeList = [
 exports.roomTypeUpdate = [
     auth,
     authAdmin,
+    upload.array("files", 5),
     (req, res) => {
         var roomType = omitNullishObject(
             {
                 name: req.body.name,
-                resort: req.body?.resort || undefined,
+                resort: req.body?.resort?.split(',') || undefined || undefined,
                 quantity: req.body.quantity,
                 price: req.body.price,
                 maxAdult: req.body.maxAdult,
@@ -80,13 +84,32 @@ exports.roomTypeUpdate = [
         }
         RoomType.findById(req.params.id).then(foundRoomType => {
             if (!foundRoomType) return apiResponse.notFoundResponse(res, "Room type not exists with this id");
-            //update room type.
+
+            //update capacity.
+            const capacity = foundRoomType.capacity
+            const newCapacity = roomType.quantity ? capacity + (roomType.quantity - foundRoomType.quantity) : null
+            if (newCapacity) {
+                roomType.capacity = newCapacity
+            }
+
+            //update img
+            const imgs = foundRoomType.imgs
+            const newImgs = req.files.map(f => f.path);
+            const removeImgs = req.body.imgsRemoved && req.body.imgsRemoved.split(',') || []
+            const updateImgs = [...imgs, ...newImgs].filter(img => !removeImgs.includes(img))
+            roomType.imgs = updateImgs
+
             RoomType.findByIdAndUpdate(req.params.id, roomType, {}, function (err) {
                 if (err) {
                     return apiResponse.ErrorResponse(res, err);
                 } else {
-                    let roomTypeData = new RoomTypeData(roomType);
-                    return apiResponse.successResponseWithData(res, "Room type update Success.", roomTypeData);
+                    // clean image
+                    deleteFiles(removeImgs.map(path => './' + path), (err) => {
+                        if (err) return apiResponse.ErrorResponse(res, err);
+
+                        let roomTypeData = new RoomTypeData(roomType);
+                        return apiResponse.successResponseWithData(res, "Room type update Success.", roomTypeData);
+                    })
                 }
             });
         })
