@@ -11,6 +11,7 @@ const utility = require("../helpers/utility");
 const mailer = require("../helpers/mailer");
 const { constants } = require("../helpers/constants");
 const auth = require("../middlewares/jwt");
+const { generatePassword } = require("../helpers/user");
 
 /**
  * User registration.
@@ -298,5 +299,44 @@ exports.refreshToken = [
 		}, ((err) => {
 			return apiResponse.ErrorResponse(res, err);
 		}));
+	}
+];
+
+exports.forgotPassword = [
+	(req, res) => {
+		UserModel.findOne({ email: req.body.email }).then(foundUser => {
+			if (!foundUser) {
+				return apiResponse.unauthorizedResponse(res, "Email not exist.");
+			}
+			const password = generatePassword(6);
+			bcrypt.hash(password, 10, function (err, hash) {
+				let html = `<p>Your new password is: ${password}</p>`;
+				mailer.send(
+					constants.confirmEmails.from,
+					req.body.email,
+					"Your New Password",
+					html
+				).then(function () {
+					// Save user.
+					UserModel.findOneAndUpdate(
+						{
+							_id: foundUser._id,
+						},
+						{
+							password: hash
+						}
+					).then(() => {
+						return apiResponse.successResponseWithData(res, "Change password Success.");
+					}, (err) => {
+						return apiResponse.ErrorResponse(res, err);
+					});
+				}).catch(err => {
+					console.log(err);
+					return apiResponse.ErrorResponse(res, err);
+				});
+			});
+		}, (err) => {
+			return apiResponse.ErrorResponse(res, err);
+		});
 	}
 ];
