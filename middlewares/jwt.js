@@ -1,22 +1,34 @@
-const jwt = require("express-jwt");
-
+const jwt = require("jsonwebtoken");
 const RefreshToken = require("../models/RefreshTokenModel");
 
-const secret = process.env.JWT_SECRET;
+function isRevoked(req, payload, done) {
+	RefreshToken.findOne({ user: payload._id }).then((foundRefreshToken) => {
+		if (!foundRefreshToken) {
+			return done(true);
+		}
+		return done(false);
+	}, ((err) => {
+		return done(err);
+	}));
+}
+function authenticateToken(req, res, next) {
+	const authHeader = req.headers["authorization"];
+	const token = authHeader && authHeader.split(" ")[1];
 
-const authenticate = jwt({
-	secret: secret,
-	// isRevoked: (req, payload, done) => {
-	// 	RefreshToken.findOne({ user: payload._id }).then((foundRefreshToken) => {
-	// 		if (!foundRefreshToken) {
-	// 			return done(null, true);
-	// 		}
-	// 		return done(null, false);
-	// 	}, ((err) => {
-	// 		return done(err);
-	// 	}));
-	// }
-});
+	if (token == null) return res.sendStatus(401);
 
-module.exports = authenticate;
+	jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, user) => {
+
+		if (err) return res.sendStatus(403);
+
+		req.user = user;
+
+		isRevoked(req, user, (error) => {
+			if (error) return res.sendStatus(403);
+			next();
+		});
+	});
+}
+
+module.exports = authenticateToken;
 

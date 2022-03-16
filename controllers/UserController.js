@@ -48,7 +48,7 @@ exports.userStore = [
 					role: req.body.role
 				})
 				// Html email body
-				let html = `<p>Your password is: ${password}:</p>`;
+				let html = `<p>Your password is: ${password}</p>`;
 				// Send password to email
 				mailer.send(
 					constants.confirmEmails.from,
