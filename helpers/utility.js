@@ -32,3 +32,5 @@ exports.deleteFiles = (files, callback) => {
 		callback(err);
 	}
 };
+
+exports.contains = (arr1, mainObj) => arr1.some(el => el in mainObj);

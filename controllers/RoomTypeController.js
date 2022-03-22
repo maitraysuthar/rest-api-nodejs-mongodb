@@ -68,7 +68,7 @@ exports.roomDetail = [
             if (roomTypes) {
                 return apiResponse.successResponseWithData(res, "Operation success", roomTypes);
             } else {
-                return apiResponse.successResponseWithData(res, "Operation success", null);
+                return apiResponse.notFoundResponse(res, "Operation success");
             }
         })
     }
