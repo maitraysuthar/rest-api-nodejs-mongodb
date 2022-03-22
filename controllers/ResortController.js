@@ -13,6 +13,27 @@ function ResortData(data) {
     this.description = data.description;
     this.status = data.status;
 }
+/**
+ * Resort List All.
+ * 
+ * @returns {Object}
+ */
+ exports.resortAll = [
+    function (req, res) {
+        try {
+            Resort.find({}).then((resorts) => {
+                if (resorts.length > 0) {
+                    return apiResponse.successResponseWithData(res, "Operation success", resorts);
+                } else {
+                    return apiResponse.successResponseWithData(res, "Operation success", []);
+                }
+            });
+        } catch (err) {
+            //throw error in json response with status 500. 
+            return apiResponse.ErrorResponse(res, err);
+        }
+    }
+]
 
 /**
  * Resort List by user.

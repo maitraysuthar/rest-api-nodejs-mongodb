@@ -7,6 +7,7 @@ var RoomTypeSchema = new Schema({
 	description: { type: String, default: "" },
 	resort: [{ type: Schema.ObjectId, ref: "Resort", required: true }],
 	price: { type: Number, required: true },
+	sale: { type: Number, default: 0 },
 	maxAdult: { type: Number, required: true },
 	maxChildren: { type: Number, required: true },
 	quantity: { type: Number, required: true, default: 1 },

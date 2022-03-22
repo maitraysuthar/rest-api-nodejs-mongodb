@@ -4,6 +4,7 @@ const auth = require("../middlewares/jwt");
 const { authAdmin } = require("../middlewares/role");
 const apiResponse = require("../helpers/apiResponse");
 const RoomType = require("../models/RoomTypeModel");
+const RoomTypeService = require('../services/RoomTypeService')
 const { isSuperAdmin } = require("../helpers/user");
 const { omitNullishObject, deleteFiles } = require('../helpers/utility')
 const { upload } = require('../controllers/UploadController')
@@ -31,7 +32,8 @@ exports.roomTypeStore = [
             allowCrypto: !!req.body.allowCrypto,
             capacity: req.body.quantity,
             imgs: req?.files?.map(f => f.path),
-            description: req.body?.description
+            description: req.body?.description,
+            sale: Number(req.body?.sale) || undefined
         }));
         roomType.save(function (err) {
             if (err) { return apiResponse.ErrorResponse(res, err); }
@@ -60,6 +62,44 @@ exports.roomTypeList = [
         })
     }
 ];
+exports.roomDetail = [
+    (req,res)=>{
+        RoomType.findById(req.params.id).populate('resort').then(roomTypes => {
+            if (roomTypes) {
+                return apiResponse.successResponseWithData(res, "Operation success", roomTypes);
+            } else {
+                return apiResponse.successResponseWithData(res, "Operation success", null);
+            }
+        })
+    }
+]
+exports.roomTypeListByResort = [
+    (req, res) => {
+        let query = {
+            resort: {
+                $in: req.params.id
+            },
+            maxAdult: {
+                $gte: req.params.maxAdult
+            }
+        }
+
+        RoomType.find({ ...query, status: true }).populate('resort').then(roomTypes => {
+            if (roomTypes.length > 0) {
+                return apiResponse.successResponseWithData(res, "Operation success", roomTypes);
+            } else {
+                return apiResponse.successResponseWithData(res, "Operation success", []);
+            }
+        })
+    }
+];
+exports.roomTypeSearch = [
+    (req, res) => {
+        RoomTypeService.searchRoom(req.body, (error, rooms) => {
+            return apiResponse.successResponseWithData(res, "Operation success", rooms);
+        })
+    }
+]
 exports.roomTypeUpdate = [
     auth,
     authAdmin,
@@ -76,7 +116,8 @@ exports.roomTypeUpdate = [
                 allowCrypto: req.body.allowCrypto,
                 _id: req.params.id,
                 imgs: req.body?.imgs || undefined,
-                description: req.body?.description
+                description: req.body?.description,
+                sale: Number(req?.body?.sale) || undefined
             }
         )
         if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
