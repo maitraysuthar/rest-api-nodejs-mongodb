@@ -5,7 +5,7 @@ var Schema = mongoose.Schema;
 var RoomTypeSchema = new Schema({
 	name: { type: String, required: true },
 	description: { type: String, default: "" },
-	resort: [{ type: Schema.ObjectId, ref: "Resort", required: true }],
+	resort: { type: Schema.ObjectId, ref: "Resort", required: true },
 	price: { type: Number, required: true },
 	sale: { type: Number, default: 0 },
 	maxAdult: { type: Number, required: true },

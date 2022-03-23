@@ -5,7 +5,8 @@ const Reservation = require("../models/ReservationModel");
 const apiResponse = require("../helpers/apiResponse");
 const auth = require("../middlewares/jwt");
 const { isSuperAdmin } = require("../helpers/user");
-const {contains} = require("../helpers/utility")
+const { contains } = require("../helpers/utility");
+
 exports.reservationStore = [
 	(req, res) => {
 		const reservation = new Reservation(
@@ -16,7 +17,7 @@ exports.reservationStore = [
 					amount: req.body.amount,
 					roomtype: req.body.roomtype,
 					invoice: req.body.invoice,
-					totalPrice:req.body.totalPrice
+					totalPrice: req.body.totalPrice
 				}
 			)
 		);
@@ -31,17 +32,19 @@ exports.reservationList = [
 	auth,
 	(req, res) => {
 		let query = {};
-		Reservation.aggregate([
-			// {$match:{"email":req.user.email}},
-
-		]);
-		Reservation.find(query).populate("roomtype").then(reservations => {
+		Reservation.find(query).populate({
+			path: "roomtype",
+			model: "RoomType",
+			populate: {
+				path: "resort",
+				model: "Resort"
+			}
+		}).then(reservations => {
 			if (reservations.length > 0) {
-				if(isSuperAdmin(req.user)) return apiResponse.successResponseWithData(res, "Operation success", reservations);
+				if (isSuperAdmin(req.user)) return apiResponse.successResponseWithData(res, "Operation success", reservations);
 
 				const resortIndex = Object.fromEntries(req.user.resort.map(key => [key, true]));
-				
-				reservations = reservations.filter(e=>contains(e.roomtype.resort,resortIndex));
+				reservations = reservations.filter(e => resortIndex[e.roomtype.resort._id]);
 				return apiResponse.successResponseWithData(res, "Operation success", reservations);
 			} else {
 				return apiResponse.successResponseWithData(res, "Operation success", []);

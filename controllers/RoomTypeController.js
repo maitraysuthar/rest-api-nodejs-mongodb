@@ -22,9 +22,9 @@ exports.roomTypeStore = [
     authAdmin,
     upload.array("files", 5),
     (req, res) => {
-        const roomType = new RoomType(omitNullishObject({
+        const newRooms = req.body.resort.split(',').map(resort=>({
             name: req.body.name,
-            resort: req.body?.resort?.split(',') || undefined,
+            resort,
             quantity: req.body.quantity,
             price: req.body.price,
             maxAdult: req.body.maxAdult,
@@ -34,12 +34,11 @@ exports.roomTypeStore = [
             imgs: req?.files?.map(f => f.path),
             description: req.body?.description,
             sale: Number(req.body?.sale) || undefined
-        }));
-        roomType.save(function (err) {
+        }))
+        RoomType.insertMany(newRooms, function(err) {
             if (err) { return apiResponse.ErrorResponse(res, err); }
-            let roomTypeData = new RoomTypeData(roomType);
-            return apiResponse.successResponseWithData(res, "RoomType add Success.", roomTypeData);
-        });
+            return apiResponse.successResponse(res, "RoomType add Success.")
+        })
     }
 ];
 exports.roomTypeList = [
@@ -108,7 +107,7 @@ exports.roomTypeUpdate = [
         var roomType = omitNullishObject(
             {
                 name: req.body.name,
-                resort: req.body?.resort?.split(',') || undefined || undefined,
+                // resort: req.body?.resort?.split(',') || undefined || undefined,
                 quantity: req.body.quantity,
                 price: req.body.price,
                 maxAdult: req.body.maxAdult,
