@@ -17,7 +17,7 @@ exports.findByUser = (user, cb) => {
 	RoomType.find(query, cb);
 };
 
-exports.searchRoom = (params, cb) => {
+exports.roomTypeSearch = (params, cb) => {
 	let checkIn = moment(Number(params.checkIn)).format('YYYY-MM-DD[T00:00:00.000Z]')
 	let checkOut = moment(Number(params.checkOut)).format('YYYY-MM-DD[T00:00:00.000Z]')
 	const aggregate = RoomType.aggregate()
@@ -46,7 +46,6 @@ exports.searchRoom = (params, cb) => {
 			docs.forEach(doc => {
 				let countRoomUsed = doc?.reservations?.filter(reservation => {
 					return reservation.checkIn < new Date(checkIn) && new Date(checkIn) < reservation.checkOut
-					return new Date(checkIn) >= reservation.checkOut || new Date(checkOut) <= reservation.checkIn
 				}) || []
 				console.info('countRoomUsed', countRoomUsed)
 				doc.capacity = doc.quantity - countRoomUsed.length
@@ -55,3 +54,58 @@ exports.searchRoom = (params, cb) => {
 		return cb(error, docs)
 	});
 };
+
+exports.roomTypeList = (user, cb) => {
+	// let currentDate = addDays(new Date(), )
+	let query = {
+		status: true
+	}
+	if (!isSuperAdmin(user)) {
+		query = {
+			...query,
+			resort: {
+				$in: user.resort
+			}
+		}
+	}
+	const aggregate = RoomType.aggregate()
+		.match(query)
+		.lookup({ from: "resorts", "localField": "resort", foreignField: "_id", as: "resort" })
+		.unwind({
+			path: '$resort',
+		})
+		.lookup({
+			from: "reservations",
+			as: "reservations",
+			let: {
+				id: '$_id'
+			},
+			pipeline: [
+				{
+					$match: {
+						$expr: {
+							$and: [
+								{
+									$eq: ['$roomtype', '$$id']
+								},
+								{
+									$or: [
+										{
+											$gte: ["$checkIn", new Date()]
+										},
+										{
+											$gte: ["$checkOut", new Date()]
+										}
+									]
+								}
+							]
+						}
+					}
+				}
+			]
+		});
+	aggregate.exec((error, docs) => {
+		if (error) return cb(error)
+		return cb(error, docs)
+	})
+}

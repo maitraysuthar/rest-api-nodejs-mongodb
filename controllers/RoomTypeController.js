@@ -52,9 +52,10 @@ exports.roomTypeList = [
                 }
             }
         }
-        RoomType.find({ ...query, status: true }).populate('resort').then(roomTypes => {
-            if (roomTypes.length > 0) {
-                return apiResponse.successResponseWithData(res, "Operation success", roomTypes);
+        RoomTypeService.roomTypeList(req.user,(error,rooms)=>{
+            if(error) return apiResponse.ErrorResponse(res,error)
+            if (rooms?.length > 0) {
+                return apiResponse.successResponseWithData(res, "Operation success", rooms);
             } else {
                 return apiResponse.successResponseWithData(res, "Operation success", []);
             }
@@ -94,7 +95,7 @@ exports.roomTypeListByResort = [
 ];
 exports.roomTypeSearch = [
     (req, res) => {
-        RoomTypeService.searchRoom(req.body, (error, rooms) => {
+        RoomTypeService.roomTypeSearch(req.body, (error, rooms) => {
             return apiResponse.successResponseWithData(res, "Operation success", rooms);
         })
     }
