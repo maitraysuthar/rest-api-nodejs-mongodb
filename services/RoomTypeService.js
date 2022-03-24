@@ -3,23 +3,16 @@ const RoomType = require("../models/RoomTypeModel");
 const _ = require("lodash");
 var mongoose = require("mongoose");
 const moment = require("moment");
+const { getCheckInTimeToDate, getCheckOutTimeToDate } = require("../helpers/time");
 
-exports.findByUser = (user, cb) => {
-	const { resort } = user;
-	let query = {};
-	if (!isSuperAdmin(user)) {
-		query = {
-			resort: {
-				$in: resort
-			}
-		};
-	}
-	RoomType.find(query, cb);
-};
-
+/**
+ * Find room match with resort, checkIn, checkOut, maxAdult and available number of room
+ * @param {*} params 
+ * @param {*} cb 
+ */
 exports.roomTypeSearch = (params, cb) => {
-	let checkIn = moment(Number(params.checkIn)).format('YYYY-MM-DD[T00:00:00.000Z]')
-	let checkOut = moment(Number(params.checkOut)).format('YYYY-MM-DD[T00:00:00.000Z]')
+	let checkIn = getCheckInTimeToDate(params.checkIn)
+	let checkOut = getCheckOutTimeToDate(params.checkOut)
 	const aggregate = RoomType.aggregate()
 		.match({
 			$and: [
@@ -38,23 +31,68 @@ exports.roomTypeSearch = (params, cb) => {
 				}
 			]
 		})
-		.lookup({ from: "reservations", "localField": "_id", foreignField: "roomtype", as: "reservations" });
+		.lookup({
+			from: "reservations",
+			as: "reservations",
+			let: {
+				id: '$_id'
+			},
+			pipeline: [
+				{
+					$match: {
+						$expr: {
+							$and: [
+								{
+									$eq: ['$roomtype', '$$id']
+								},
+								{
+									$or: [
+
+										{
+											$and: [
+												{
+													$gt: [checkIn, "$checkIn"]
+												},
+												{
+													$lt: [checkIn, "$checkOut"]
+												},
+											]
+										},
+										{
+											$and: [
+												{
+													$gt: [checkOut, "$checkIn"]
+												},
+												{
+													$lt: [checkOut, "$checkOut"]
+												},
+											]
+										},
+									]
+								}
+							]
+						}
+					}
+				}
+			]
+		});
 
 	aggregate.exec((error, docs) => {
 		if (error) return cb(error)
 		if (docs?.length) {
 			docs.forEach(doc => {
-				let countRoomUsed = doc?.reservations?.filter(reservation => {
-					return reservation.checkIn < new Date(checkIn) && new Date(checkIn) < reservation.checkOut
-				}) || []
-				console.info('countRoomUsed', countRoomUsed)
-				doc.capacity = doc.quantity - countRoomUsed.length
+				const amountRoom = doc?.reservations?.reduce((r, n) => r + n.amount, 0) || 0
+				doc.capacity = doc.quantity - amountRoom
 			})
 		}
 		return cb(error, docs)
 	});
 };
-
+/**
+ * Find room by user
+ * @param {*} user 
+ * @param {*} cb 
+ */
 exports.roomTypeList = (user, cb) => {
 	// let currentDate = addDays(new Date(), )
 	let query = {
