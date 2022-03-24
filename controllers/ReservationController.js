@@ -5,15 +5,15 @@ const Reservation = require("../models/ReservationModel");
 const apiResponse = require("../helpers/apiResponse");
 const auth = require("../middlewares/jwt");
 const { isSuperAdmin } = require("../helpers/user");
-const { contains } = require("../helpers/utility");
+const { getCheckInTimeToDate, getCheckOutTimeToDate } = require("../helpers/time");
 
 exports.reservationStore = [
 	(req, res) => {
 		const reservation = new Reservation(
 			omitNullishObject(
 				{
-					checkIn: req.body.checkIn,
-					checkOut: req.body.checkOut,
+					checkIn: getCheckInTimeToDate(req.body.checkIn),
+					checkOut: getCheckOutTimeToDate(req.body.checkOut),
 					amount: req.body.amount,
 					roomtype: req.body.roomtype,
 					invoice: req.body.invoice,
