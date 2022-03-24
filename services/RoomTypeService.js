@@ -64,7 +64,7 @@ exports.roomTypeList = (user, cb) => {
 		query = {
 			...query,
 			resort: {
-				$in: user.resort
+				$in: user.resort.map(id => new mongoose.Types.ObjectId(id))
 			}
 		}
 	}
