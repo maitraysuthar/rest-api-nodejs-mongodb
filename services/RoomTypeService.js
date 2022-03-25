@@ -31,6 +31,10 @@ exports.roomTypeSearch = (params, cb) => {
 				}
 			]
 		})
+		.lookup({ from: "resorts", "localField": "resort", foreignField: "_id", as: "resort" })
+		.unwind({
+			path: '$resort',
+		})
 		.lookup({
 			from: "reservations",
 			as: "reservations",
@@ -152,6 +156,10 @@ exports.roomTypeDetail = (params, cb) => {
 	const aggregate = RoomType.aggregate()
 		.match({
 			_id: mongoose.Types.ObjectId(params.roomtype)
+		})
+		.lookup({ from: "resorts", "localField": "resort", foreignField: "_id", as: "resort" })
+		.unwind({
+			path: '$resort',
 		})
 		.lookup({
 			from: "reservations",
