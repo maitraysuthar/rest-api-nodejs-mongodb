@@ -1,4 +1,6 @@
 const _ = require("lodash");
+const { body, validationResult } = require("express-validator");
+const { sanitizeBody } = require("express-validator");
 
 const { omitNullishObject } = require("../helpers/utility");
 const Reservation = require("../models/ReservationModel");
@@ -8,7 +10,18 @@ const { isSuperAdmin } = require("../helpers/user");
 const { getCheckInTimeToDate, getCheckOutTimeToDate } = require("../helpers/time");
 const ReservationService = require("../services/ReservationService");
 exports.reservationStore = [
+	body("amount", "Amount must be integer.").isInt({ min: 1 }).trim(),
+	body("invoice.fullname", "Invoice.Email not valid.").isLength({ min: 1 }).trim(),
+	body("invoice.email", "Invoice.Email not valid.").isEmail().trim(),
+	body("invoice.phone", "Invoice.Phone not valid.").isMobilePhone().trim(),
+	body("totalPrice", "Total price must be integer").isInt({ min: 1 }).trim(),
 	(req, res) => {
+		const errors = validationResult(req);
+
+		if (!errors.isEmpty()) {
+			return apiResponse.validationErrorWithData(res, "Validation Error.", errors.array());
+		}
+
 		const reservation = new Reservation(
 			omitNullishObject(
 				{
