@@ -6,7 +6,7 @@ const apiResponse = require("../helpers/apiResponse");
 const auth = require("../middlewares/jwt");
 const { isSuperAdmin } = require("../helpers/user");
 const { getCheckInTimeToDate, getCheckOutTimeToDate } = require("../helpers/time");
-
+const ReservationService = require("../services/ReservationService");
 exports.reservationStore = [
 	(req, res) => {
 		const reservation = new Reservation(
@@ -21,10 +21,9 @@ exports.reservationStore = [
 				}
 			)
 		);
-		reservation.save().then(() => {
-			return apiResponse.successResponse(res, "Booking success.");
-		}, (err) => {
-			return apiResponse.ErrorResponse(res, err);
+		ReservationService.create(reservation, (err) => {
+			if (err) return apiResponse.ErrorResponse(res, err);
+			return apiResponse.successResponse(res, "Reservation create success.");
 		});
 	}
 ];

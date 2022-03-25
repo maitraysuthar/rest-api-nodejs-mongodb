@@ -147,3 +147,64 @@ exports.roomTypeList = (user, cb) => {
 		return cb(error, docs)
 	})
 }
+/**
+ * Fetch detail room 
+ * @param {*} params 
+ * @param {*} cb 
+ */
+exports.roomTypeDetail = (params, cb) => {
+	const aggregate = RoomType.aggregate()
+		.match({
+			_id: mongoose.Types.ObjectId(params.roomtype)
+		})
+		.lookup({
+			from: "reservations",
+			as: "reservations",
+			let: {
+				id: '$_id'
+			},
+			pipeline: [
+				{
+					$match: {
+						$expr: {
+							$and: [
+								{
+									$eq: ['$roomtype', '$$id']
+								},
+								{
+									$or: [
+
+										{
+											$and: [
+												{
+													$gt: [params.checkIn, "$checkIn"]
+												},
+												{
+													$lt: [params.checkIn, "$checkOut"]
+												},
+											]
+										},
+										{
+											$and: [
+												{
+													$gt: [params.checkOut, "$checkIn"]
+												},
+												{
+													$lt: [params.checkOut, "$checkOut"]
+												},
+											]
+										},
+									]
+								}
+							]
+						}
+					}
+				}
+			]
+		})
+	aggregate.exec((error, docs) => {
+		if (error) return cb(error)
+		if (docs) return cb(error, docs[0])
+		return cb(error, docs)
+	})
+}
