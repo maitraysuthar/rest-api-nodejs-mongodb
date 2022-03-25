@@ -119,7 +119,7 @@ exports.roomTypeUpdate = [
                 _id: req.params.id,
                 imgs: req.body?.imgs || undefined,
                 description: req.body?.description,
-                sale: Number(req?.body?.sale) || undefined
+                sale: Number(req?.body?.sale) ?? undefined
             }
         )
         if (!mongoose.Types.ObjectId.isValid(req.params.id)) {

@@ -125,16 +125,6 @@ exports.roomTypeList = (user, cb) => {
 							$and: [
 								{
 									$eq: ['$roomtype', '$$id']
-								},
-								{
-									$or: [
-										{
-											$gte: ["$checkIn", new Date()]
-										},
-										{
-											$gte: ["$checkOut", new Date()]
-										}
-									]
 								}
 							]
 						}
