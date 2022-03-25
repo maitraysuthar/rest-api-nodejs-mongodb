@@ -21,7 +21,11 @@ function ResortData(data) {
  exports.resortAll = [
     function (req, res) {
         try {
-            Resort.find({}).then((resorts) => {
+            Resort.find({
+                status:{
+                    $ne:0
+                }
+            }).then((resorts) => {
                 if (resorts.length > 0) {
                     return apiResponse.successResponseWithData(res, "Operation success", resorts);
                 } else {

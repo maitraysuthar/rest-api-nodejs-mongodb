@@ -7,7 +7,8 @@ const RoomType = require("../models/RoomTypeModel");
 const RoomTypeService = require('../services/RoomTypeService')
 const { isSuperAdmin } = require("../helpers/user");
 const { omitNullishObject, deleteFiles } = require('../helpers/utility')
-const { upload } = require('../controllers/UploadController')
+const { upload } = require('../controllers/UploadController');
+const { getCheckInTimeToDate, getCheckOutTimeToDate } = require("../helpers/time");
 
 function RoomTypeData(data) {
     return {
@@ -22,7 +23,7 @@ exports.roomTypeStore = [
     authAdmin,
     upload.array("files", 5),
     (req, res) => {
-        const newRooms = req.body.resort.split(',').map(resort=>({
+        const newRooms = req.body.resort.split(',').map(resort => ({
             name: req.body.name,
             resort,
             quantity: req.body.quantity,
@@ -35,7 +36,7 @@ exports.roomTypeStore = [
             description: req.body?.description,
             sale: Number(req.body?.sale) || undefined
         }))
-        RoomType.insertMany(newRooms, function(err) {
+        RoomType.insertMany(newRooms, function (err) {
             if (err) { return apiResponse.ErrorResponse(res, err); }
             return apiResponse.successResponse(res, "RoomType add Success.")
         })
@@ -52,8 +53,8 @@ exports.roomTypeList = [
                 }
             }
         }
-        RoomTypeService.roomTypeList(req.user,(error,rooms)=>{
-            if(error) return apiResponse.ErrorResponse(res,error)
+        RoomTypeService.roomTypeList(req.user, (error, rooms) => {
+            if (error) return apiResponse.ErrorResponse(res, error)
             if (rooms?.length > 0) {
                 return apiResponse.successResponseWithData(res, "Operation success", rooms);
             } else {
@@ -63,13 +64,14 @@ exports.roomTypeList = [
     }
 ];
 exports.roomDetail = [
-    (req,res)=>{
-        RoomType.findById(req.params.id).populate('resort').then(roomTypes => {
-            if (roomTypes) {
-                return apiResponse.successResponseWithData(res, "Operation success", roomTypes);
-            } else {
-                return apiResponse.notFoundResponse(res, "Operation success");
-            }
+    (req, res) => {
+        RoomTypeService.roomTypeDetail({
+            checkIn: getCheckInTimeToDate(req.query.checkIn),
+            checkOut: getCheckOutTimeToDate(req.query.checkOut),
+            roomtype: req.params.id
+        }, (error, room) => {
+            if (error) return apiResponse.ErrorResponse(res, error)
+            return apiResponse.successResponseWithData(res, "Operation success", room);
         })
     }
 ]

@@ -147,10 +147,16 @@ exports.roomTypeList = (user, cb) => {
 		return cb(error, docs)
 	})
 }
+
 /**
  * Fetch detail room 
- * @param {*} params 
- * @param {*} cb 
+ * @param {Object} params 
+ * @params
+ * - roomtype(mongoose.Types.ObjectId)
+ * - checkIn (ISO DATE)
+ * - checkOut (ISO DATE)
+ * @param {Function} cb 
+ * - cb(error,room)
  */
 exports.roomTypeDetail = (params, cb) => {
 	const aggregate = RoomType.aggregate()
