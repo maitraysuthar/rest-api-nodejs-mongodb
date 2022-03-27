@@ -2,8 +2,14 @@ const { isSuperAdmin } = require("../helpers/user");
 const RoomType = require("../models/RoomTypeModel");
 const _ = require("lodash");
 var mongoose = require("mongoose");
-const moment = require("moment");
+const Moment = require("moment");
+
+const MomentRange = require("moment-range");
+
+const moment = MomentRange.extendMoment(Moment);
+
 const { getCheckInTimeToDate, getCheckOutTimeToDate } = require("../helpers/time");
+const { min } = require("lodash");
 
 /**
  * Find room match with resort, checkIn, checkOut, maxAdult and available number of room
@@ -72,6 +78,16 @@ exports.roomTypeSearch = (params, cb) => {
 												},
 											]
 										},
+										{
+											$and: [
+												{
+													$gt: [checkOut, "$checkOut"]
+												},
+												{
+													$lt: [checkIn, "$checkIn"]
+												},
+											]
+										},
 									]
 								}
 							]
@@ -85,8 +101,25 @@ exports.roomTypeSearch = (params, cb) => {
 		if (error) return cb(error)
 		if (docs?.length) {
 			docs.forEach(doc => {
-				const amountRoom = doc?.reservations?.reduce((r, n) => r + n.amount, 0) || 0
-				doc.capacity = doc.quantity - amountRoom
+				const reservations = doc?.reservations || []
+
+				const listAvai = []
+				reservations.reduce((ret, reservation, index) => {
+					if (index == 0) {
+						listAvai.push(doc.quantity - reservation.amount)
+						return doc.quantity - reservation.amount
+					}
+					const preRange = moment.range(reservations[index - 1].checkIn, reservations[index - 1].checkOut)
+					const range = moment.range(reservation.checkIn, reservation.checkOut)
+					if (preRange.overlaps(range)) {
+						listAvai.push(ret - reservation.amount)
+						return ret - reservation.amount
+					} else {
+						listAvai.push(ret + reservations[index - 1].amount - reservation.amount)
+						return ret + reservations[index - 1].amount - reservation.amount
+					}
+				}, doc.quantity)
+				doc.capacity = min([...listAvai, doc.quantity])
 			})
 		}
 		return cb(error, docs)
@@ -153,6 +186,8 @@ exports.roomTypeList = (user, cb) => {
  * - cb(error,room)
  */
 exports.roomTypeDetail = (params, cb) => {
+	const checkIn = params.checkIn
+	const checkOut = params.checkOut
 	const aggregate = RoomType.aggregate()
 		.match({
 			_id: mongoose.Types.ObjectId(params.roomtype)
@@ -181,20 +216,30 @@ exports.roomTypeDetail = (params, cb) => {
 										{
 											$and: [
 												{
-													$gt: [params.checkIn, "$checkIn"]
+													$gt: [checkIn, "$checkIn"]
 												},
 												{
-													$lt: [params.checkIn, "$checkOut"]
+													$lt: [checkIn, "$checkOut"]
 												},
 											]
 										},
 										{
 											$and: [
 												{
-													$gt: [params.checkOut, "$checkIn"]
+													$gt: [checkOut, "$checkIn"]
 												},
 												{
-													$lt: [params.checkOut, "$checkOut"]
+													$lt: [checkOut, "$checkOut"]
+												},
+											]
+										},
+										{
+											$and: [
+												{
+													$gt: [checkOut, "$checkOut"]
+												},
+												{
+													$lt: [checkIn, "$checkIn"]
 												},
 											]
 										},
@@ -208,7 +253,30 @@ exports.roomTypeDetail = (params, cb) => {
 		})
 	aggregate.exec((error, docs) => {
 		if (error) return cb(error)
-		if (docs) return cb(error, docs[0])
+		if (docs) {
+			docs.forEach(doc => {
+				const reservations = doc?.reservations || []
+
+				const listAvai = []
+				reservations.reduce((ret, reservation, index) => {
+					if (index == 0) {
+						listAvai.push(doc.quantity - reservation.amount)
+						return doc.quantity - reservation.amount
+					}
+					const preRange = moment.range(reservations[index - 1].checkIn, reservations[index - 1].checkOut)
+					const range = moment.range(reservation.checkIn, reservation.checkOut)
+					if (preRange.overlaps(range)) {
+						listAvai.push(ret - reservation.amount)
+						return ret - reservation.amount
+					} else {
+						listAvai.push(ret + reservations[index - 1].amount - reservation.amount)
+						return ret + reservations[index - 1].amount - reservation.amount
+					}
+				}, doc.quantity)
+				doc.capacity = min([...listAvai, doc.quantity])
+			})
+			return cb(error, docs[0])
+		}
 		return cb(error, docs)
 	})
 }
