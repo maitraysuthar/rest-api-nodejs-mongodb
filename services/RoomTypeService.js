@@ -56,6 +56,9 @@ exports.roomTypeSearch = (params, cb) => {
 									$eq: ['$roomtype', '$$id']
 								},
 								{
+									$eq: ['$status', 1]
+								},
+								{
 									$or: [
 
 										{
@@ -161,7 +164,10 @@ exports.roomTypeList = (user, cb) => {
 						$expr: {
 							$and: [
 								{
-									$eq: ['$roomtype', '$$id']
+									$eq: ['$roomtype', '$$id'],
+								},
+								{
+									$eq: ['$status', 1]
 								}
 							]
 						}

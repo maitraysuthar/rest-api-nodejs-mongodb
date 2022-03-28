@@ -26,7 +26,8 @@
     "mongoose": "^5.7.6",
     "morgan": "~1.9.0",
     "multer": "^1.4.4",
-    "nodemailer": "^6.3.1"
+    "nodemailer": "^6.3.1",
+    "nunjucks": "^3.2.3"
   },
   "devDependencies": {
     "chai": "^4.2.0",

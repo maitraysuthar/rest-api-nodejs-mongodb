@@ -30,7 +30,8 @@ exports.reservationStore = [
 					amount: req.body.amount,
 					roomtype: req.body.roomtype,
 					invoice: req.body.invoice,
-					totalPrice: req.body.totalPrice
+					totalPrice: req.body.totalPrice,
+					orderId: req.body.orderId
 				}
 			)
 		);
