@@ -107,7 +107,7 @@ exports.updatePayment = (req, cb) => {
 						full_name: reservation?.invoice?.fullname,
 						phone: reservation?.invoice?.phone,
 						email: reservation?.invoice?.email,
-						order_id: '123456',
+						order_id: vnp_Params["vnp_TxnRef"],
 						checkIn: `Check in sau 3 giờ ${moment(reservation.checkIn).format('DD-MM-YYY')}`,
 						checkOut: `Check out trước 12 giờ ${moment(reservation.checkOut).format('DD-MM-YYY')}`,
 						totalPrice: `${reservation.totalPrice} VNĐ`
