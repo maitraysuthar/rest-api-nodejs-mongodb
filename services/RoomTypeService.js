@@ -177,6 +177,36 @@ exports.roomTypeList = (user, cb) => {
 		});
 	aggregate.exec((error, docs) => {
 		if (error) return cb(error)
+		docs.forEach(doc => {
+			let reservations = doc?.reservations || []
+			reservations = reservations.filter((reservation) => {
+				let checkIn = moment(reservation.checkIn)
+				let checkOut = moment(reservation.checkOut)
+
+				if (checkIn.isBefore(moment.now()) || checkOut.isAfter(moment.now())) {
+					return true
+				}
+			})
+
+			const listAvai = []
+			reservations.reduce((ret, reservation, index) => {
+				if (index == 0) {
+					listAvai.push(doc.quantity - reservation.amount)
+					return doc.quantity - reservation.amount
+				}
+				const preRange = moment.range(reservations[index - 1].checkIn, reservations[index - 1].checkOut)
+				const range = moment.range(reservation.checkIn, reservation.checkOut)
+				if (preRange.overlaps(range)) {
+					listAvai.push(ret - reservation.amount)
+					return ret - reservation.amount
+				} else {
+					listAvai.push(ret + reservations[index - 1].amount - reservation.amount)
+					return ret + reservations[index - 1].amount - reservation.amount
+				}
+			}, doc.quantity)
+			doc.capacity = min([...listAvai, doc.quantity])
+
+		})
 		return cb(error, docs)
 	})
 }
