@@ -34,8 +34,8 @@ exports.create = (reservation, cb) => {
             return cb("Total price invalid");
         }
         // Validate amount
-        const romNoneAvailable = room?.reservations?.reduce((res, next) => res + next.amount, 0) || 0
-        if (reservation.amount > room.quantity - max([romNoneAvailable, 0])) {
+        const capacity = room.capacity
+        if (reservation.amount > capacity) {
             return cb("Room amount invalid");
         }
         reservation.save().then(() => {
