@@ -4,8 +4,11 @@ var mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 
 const User = require("../models/UserModel");
+const RefreshToken = require("../models/RefreshTokenModel");
+
 const auth = require("../middlewares/jwt");
 const { authSuperAdmin } = require("../middlewares/role");
+
 const apiResponse = require("../helpers/apiResponse");
 const { generatePassword } = require("../helpers/user");
 const { omitNullishObject } = require('../helpers/utility')
@@ -96,14 +99,20 @@ exports.userUpdate = [
 					resort: req.body.resort,
 					status: req.body.status
 				})
-				//update resort for user.
-				User.findByIdAndUpdate(req.params.id, user, {}, function (err) {
-					if (err) {
-						return apiResponse.ErrorResponse(res, err);
-					} else {
-						return apiResponse.successResponseWithData(res, "User update Success.");
-					}
+				// Force logout user
+				RefreshToken.findOneAndDelete({ user: foundUser._id }).then(() => {
+					//update resort for user.
+					User.findByIdAndUpdate(req.params.id, user, {}, function (err) {
+						if (err) {
+							return apiResponse.ErrorResponse(res, err);
+						} else {
+							return apiResponse.successResponseWithData(res, "User update Success.");
+						}
+					});
+				}, (error) => {
+					return apiResponse.ErrorResponse(res, error);
 				});
+
 			}
 		});
 	}
