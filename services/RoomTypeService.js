@@ -217,6 +217,9 @@ exports.roomTypeDetail = (params, cb) => {
 									$eq: ['$roomtype', '$$id']
 								},
 								{
+									$eq: ['$status', 1]
+								},
+								{
 									$or: [
 
 										{
