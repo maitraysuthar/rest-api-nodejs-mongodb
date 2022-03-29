@@ -26,7 +26,7 @@ var ReservationSchema = new Schema({
 	totalPrice: { type: Number, required: true },
 	status: { type: Number, enum: Object.values(STATUS), default: 0 },
 	invoice: { type: InvoiceSchame, required: true },
-	orderId: { type: String, required: true }
+	orderId: { type: String, required: true, unique: true }
 }, { timestamps: true });
 
 
