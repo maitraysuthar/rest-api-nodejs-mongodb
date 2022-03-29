@@ -41,7 +41,7 @@ exports.create = (reservation, cb) => {
         reservation.save().then(() => {
             return cb(null);
         }, (err) => {
-            return cb(err);
+            return cb(err?.message);
         });
     });
 };
