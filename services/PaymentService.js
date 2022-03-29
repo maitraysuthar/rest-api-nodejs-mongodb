@@ -26,8 +26,8 @@ exports.getUrl = (req) => {
 
 	var date = new Date();
 
-	var createDate = moment(date).format("yyyyMMDDHHmmss");
-	var orderId = moment(date).format("yyyyMMDDHHmmss");
+	var createDate = moment(date).format("YYYYMMDDHHmmss");
+	var orderId = moment(date).format("YYYYMMDDHHmmss");
 
 	var bankCode = req.body.bankCode;
 
