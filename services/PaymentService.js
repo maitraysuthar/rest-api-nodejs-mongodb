@@ -1,13 +1,13 @@
 const moment = require("moment");
 const querystring = require("qs");
 const crypto = require("crypto");
-const mailer = require("../helpers/mailer");
-const { constants } = require("../helpers/constants");
 const fs = require("fs");
 const path = require("path");
 const nunjucks = require("nunjucks");
+const { nanoid } = require('nanoid')
 
-
+const mailer = require("../helpers/mailer");
+const { constants } = require("../helpers/constants");
 const { getMessage } = require("../helpers/vnpay");
 const Reservation = require("../models/ReservationModel");
 
@@ -27,7 +27,7 @@ exports.getUrl = (req) => {
 	var date = new Date();
 
 	var createDate = moment(date).format("YYYYMMDDHHmmss");
-	var orderId = moment(date).format("YYYYMMDDHHmmss");
+	var orderId = nanoid();
 
 	var bankCode = req.body.bankCode;
 
