@@ -10,6 +10,7 @@ const mailer = require("../helpers/mailer");
 const { constants } = require("../helpers/constants");
 const { getMessage } = require("../helpers/vnpay");
 const Reservation = require("../models/ReservationModel");
+const { RESERVATION_STATUS } = require("../constants/index");
 
 exports.getUrl = (req) => {
 	const amount = req.body.amount;
@@ -86,21 +87,43 @@ exports.updatePayment = (req, cb) => {
 	if (secureHash === signed) {
 		// Verify payment status code
 		if (vnp_Params["vnp_ResponseCode"] !== "00") {
-			return cb(getMessage(vnp_Params["vnp_ResponseCode"]));
+			return Reservation.findOne({
+				orderId: vnp_Params["vnp_TxnRef"]
+			}).then(reservation => {
+				if (!reservation) {
+					return cb(`Order id: ${vnp_Params["vnp_TxnRef"]} not exist.`);
+				}
+
+				Reservation.findOneAndUpdate(
+					{
+						orderId: vnp_Params["vnp_TxnRef"]
+					},
+					{
+						status: RESERVATION_STATUS.REJECTED
+					}
+				).then(() => {
+					return cb(getMessage(vnp_Params["vnp_ResponseCode"]));
+				}, (error) => {
+					return cb(error?.message);
+				})
+			})
 		}
 		// Update status reservation
 		Reservation.findOne({
 			orderId: vnp_Params["vnp_TxnRef"]
 		}).then(reservation => {
 			if (!reservation) {
-				return cb("Order not exist.");
+				return cb(`Order id: ${vnp_Params["vnp_TxnRef"]} not exist.`);
 			}
 
-			Reservation.findOneAndUpdate({
-				orderId: vnp_Params["vnp_TxnRef"]
-			}, {
-				status: 1
-			}).then(() => {
+			Reservation.findOneAndUpdate(
+				{
+					orderId: vnp_Params["vnp_TxnRef"]
+				},
+				{
+					status: RESERVATION_STATUS.BOOKED
+				}
+			).then(() => {
 				const html = nunjucks.render(
 					path.resolve("template", "payement_success.html"),
 					{
