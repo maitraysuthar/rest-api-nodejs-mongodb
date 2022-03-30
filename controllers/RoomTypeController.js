@@ -1,5 +1,5 @@
 var mongoose = require("mongoose");
-
+var bluebird = require("bluebird");
 const auth = require("../middlewares/jwt");
 const { authAdmin } = require("../middlewares/role");
 const apiResponse = require("../helpers/apiResponse");
@@ -23,7 +23,7 @@ exports.roomTypeStore = [
     authAdmin,
     upload.array("files", 5),
     (req, res) => {
-        const newRooms = req.body.resort.split(',').map(resort => ({
+        const rooms = req.body.resort.split(',').map(resort => new RoomType(omitNullishObject({
             name: req.body.name,
             resort,
             quantity: req.body.quantity,
@@ -35,10 +35,24 @@ exports.roomTypeStore = [
             imgs: req?.files?.map(f => f.path),
             description: req.body?.description,
             sale: Number(req.body?.sale) || undefined
-        }))
-        RoomType.insertMany(newRooms, function (err) {
-            if (err) { return apiResponse.ErrorResponse(res, err); }
-            return apiResponse.successResponse(res, "RoomType add Success.")
+        })))
+
+        const taskVerifyExistRoom = rooms.map(room => {
+            return new Promise((resolve, reject) => {
+                RoomType.findOne({ name: room.name, resort: mongoose.Types.ObjectId(room.resort) }).populate('resort').then(foundRoom => {
+                    if (foundRoom) return reject(new Error(`Duplicate room ${foundRoom.name} at resort ${foundRoom.resort.name}`))
+                    return resolve()
+                })
+            })
+        })
+
+        bluebird.all(taskVerifyExistRoom).then(() => {
+            RoomType.insertMany(rooms, function (err) {
+                if (err) { return apiResponse.ErrorResponse(res, err); }
+                return apiResponse.successResponse(res, "RoomType add Success.")
+            })
+        }).catch(error => {
+            return apiResponse.ErrorResponse(res, error.message)
         })
     }
 ];

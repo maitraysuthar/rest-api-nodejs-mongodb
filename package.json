@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "bcrypt": "^3.0.6",
+    "bluebird": "^3.7.2",
     "codacy-coverage": "^3.4.0",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",

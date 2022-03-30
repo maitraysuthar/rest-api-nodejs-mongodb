@@ -3,7 +3,7 @@ var mongoose = require("mongoose");
 var Schema = mongoose.Schema;
 
 var RoomTypeSchema = new Schema({
-	name: { type: String, required: true },
+	name: { type: String, required: true, unique: true },
 	description: { type: String, default: "" },
 	resort: { type: Schema.ObjectId, ref: "Resort", required: true },
 	price: { type: Number, required: true },

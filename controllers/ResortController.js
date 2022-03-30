@@ -87,7 +87,7 @@ exports.resortStore = [
             );
 
             resort.save(function (err) {
-                if (err) { return apiResponse.ErrorResponse(res, err); }
+                if (err) { return apiResponse.ErrorResponse(res, err?.message); }
                 let bookData = new ResortData(resort);
                 return apiResponse.successResponseWithData(res, "Resort add Success.", bookData);
             });
