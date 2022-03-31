@@ -24,6 +24,7 @@ mongoose.connect(MONGODB_URL, { useNewUrlParser: true, useUnifiedTopology: true 
 		console.log("App is running ... \n");
 		console.log("Press CTRL + C to stop the process. \n");
 	}
+	require("./worker/reservation");
 })
 	.catch(err => {
 		console.error("App starting error:", err.message);

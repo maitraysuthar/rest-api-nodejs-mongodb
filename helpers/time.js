@@ -14,7 +14,7 @@ exports.getCheckOutTimeToDate = (time) => {
  * return true if payment created not over 1 day and time cancel < timeCheckIn
  */
 exports.isAllowCanceled = (reservation) => {
-	const timeCheckIn = moment(reservation.checkIn).subtract(process.env.RESERVATION_LIFE, "day");
+	const timeCheckIn = moment(reservation.checkIn).subtract(process.env.RESERVATION_LIFE_CANCELED, "day");
 
 	return moment(moment.now()).isBefore(timeCheckIn);
 }; 
