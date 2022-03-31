@@ -23,3 +23,12 @@ exports.vnpIpn = [
 		});
 	}
 ];
+
+exports.cancel = [
+	(req, res) => {
+		PaymentService.cancelPayment(req, (error) => {
+			if (error) return apiResponse.ErrorResponse(res, error);
+			return apiResponse.successResponse(res, "Payment cancel successful.");
+		});
+	}
+];
