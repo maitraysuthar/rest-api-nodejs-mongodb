@@ -7,6 +7,8 @@ const auth = require("../middlewares/jwt");
 const { isSuperAdmin } = require("../helpers/user");
 const { getCheckInTimeToDate, getCheckOutTimeToDate } = require("../helpers/time");
 const ReservationService = require("../services/ReservationService");
+const { authAdmin } = require("../middlewares/role");
+
 exports.reservationStore = [
 	body("amount", "Amount must be integer.").isInt({ min: 1 }).trim(),
 	body("invoice.fullname", "Email not valid.").isLength({ min: 1 }).trim(),
@@ -60,6 +62,17 @@ exports.reservationList = [
 			} else {
 				return apiResponse.successResponseWithData(res, "Operation success", []);
 			}
+		});
+	}
+];
+
+exports.checkout = [
+	auth,
+	authAdmin,
+	(req, res) => {
+		ReservationService.changeStatus(req, (error) => {
+			if (error) return apiResponse.ErrorResponse(res, error);
+			apiResponse.successResponse(res, "Operation success");
 		});
 	}
 ];

@@ -1,5 +1,7 @@
 const apiResponse = require("../helpers/apiResponse");
 const PaymentService = require("../services/PaymentService");
+const auth = require("../middlewares/jwt");
+const { authAdmin } = require("../middlewares/role");
 exports.getUrl = [
 	(req, res) => {
 		const url = PaymentService.getUrl(req);
@@ -24,9 +26,19 @@ exports.vnpIpn = [
 	}
 ];
 
-exports.cancel = [
+exports.requestCancel = [
 	(req, res) => {
 		PaymentService.cancelPayment(req, (error) => {
+			if (error) return apiResponse.ErrorResponse(res, error);
+			return apiResponse.successResponse(res, "Payment cancel successful.");
+		});
+	}
+];
+exports.refund = [
+	auth,
+	authAdmin,
+	(req, res) => {
+		PaymentService.refund(req, (error) => {
 			if (error) return apiResponse.ErrorResponse(res, error);
 			return apiResponse.successResponse(res, "Payment cancel successful.");
 		});

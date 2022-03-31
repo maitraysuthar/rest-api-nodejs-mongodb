@@ -5,5 +5,6 @@ var router = express.Router();
 
 router.get("/", ReservationController.reservationList);
 router.post("/", ReservationController.reservationStore);
+router.put("/checkout/:id", ReservationController.checkout);
 
 module.exports = router;

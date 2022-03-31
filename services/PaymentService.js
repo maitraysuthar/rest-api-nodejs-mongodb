@@ -12,6 +12,7 @@ const { getMessage } = require("../helpers/vnpay");
 const Reservation = require("../models/ReservationModel");
 const { RESERVATION_STATUS } = require("../constants/index");
 const RoomTypeService = require('../services/RoomTypeService');
+const ReservationService = require('../services/ReservationService')
 const { isAllowCanceled } = require("../helpers/time");
 
 exports.getUrl = (req) => {
@@ -195,8 +196,8 @@ exports.cancelPayment = (req, cb) => {
 			orderId: vnp_Params["vnp_TxnRef"]
 		}).then((reservation) => {
 			if (!reservation) return cb(`Order ${vnp_Params["vnp_TxnRef"]} not exist.`)
-			if(reservation.status === RESERVATION_STATUS.PENDING_CANCELED) {
-				return  cb(`Your request is in progress.`)
+			if (reservation.status === RESERVATION_STATUS.PENDING_CANCELED) {
+				return cb(`Your request is in progress.`)
 			}
 			const allowCancel = isAllowCanceled(reservation)
 			if (!allowCancel) return cb(`Order not allow cancel.`)
@@ -212,6 +213,11 @@ exports.cancelPayment = (req, cb) => {
 		return cb('Sign not matched.')
 	}
 }
+
+exports.refund = (req, cb) => {
+	ReservationService.changeStatus(req,cb)
+}
+
 function sortObject(obj) {
 	var sorted = {};
 	var str = [];
