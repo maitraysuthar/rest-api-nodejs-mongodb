@@ -11,7 +11,8 @@ cron.schedule(
         Reservation.updateMany({
             createdAt: {
                 $lte: start
-            }
+            },
+            status: RESERVATION_STATUS.PENDING_PAYMENT
         }, {
             status: RESERVATION_STATUS.REJECTED
         }).then(() => {
