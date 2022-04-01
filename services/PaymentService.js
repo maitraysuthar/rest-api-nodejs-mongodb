@@ -172,7 +172,7 @@ exports.updatePayment = (req, cb) => {
 			})
 		});
 	} else {
-		cb("Signed not matched");
+		cb("Checksum fail.");
 	}
 };
 
@@ -210,7 +210,7 @@ exports.cancelPayment = (req, cb) => {
 			return cb(error?.message)
 		})
 	} else {
-		return cb('Sign not matched.')
+		return cb('Checksum fail.')
 	}
 }
 

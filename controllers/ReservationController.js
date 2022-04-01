@@ -1,4 +1,6 @@
 const { body, validationResult } = require("express-validator");
+const querystring = require("qs");
+const crypto = require("crypto");
 
 const { omitNullishObject } = require("../helpers/utility");
 const Reservation = require("../models/ReservationModel");
@@ -8,7 +10,32 @@ const { isSuperAdmin } = require("../helpers/user");
 const { getCheckInTimeToDate, getCheckOutTimeToDate } = require("../helpers/time");
 const ReservationService = require("../services/ReservationService");
 const { authAdmin } = require("../middlewares/role");
-
+/**
+ * Sign body
+ */
+exports.sign = [
+	body("amount", "Amount must be integer.").isInt({ min: 1 }).trim(),
+	body("invoice.fullname", "Email not valid.").isLength({ min: 1 }).trim(),
+	body("invoice.email", "Email not valid.").isEmail().trim(),
+	body("invoice.phone", "Phone not valid.").isMobilePhone().trim(),
+	body("totalPrice", "Total price must be integer").isInt({ min: 1 }).trim(),
+	(req, res) => {
+		var secretKey = process.env.VNP_HASHSECRET;
+		const errors = validationResult(req);
+		if (!errors.isEmpty()) {
+			return apiResponse.validationErrorWithData(res, errors.array()[0].msg, errors.array());
+		}
+		let params = omitNullishObject(req.body);
+		// params = sortObject(params);
+		var signData = querystring.stringify(params, { encode: false });
+		var hmac = crypto.createHmac("sha512", secretKey);
+		var signed = hmac.update(signData).digest("hex");
+		return apiResponse.successResponseWithData(res, "Sign success!", signed);
+	}
+];
+/**
+ * Create reservation with status pendding payment
+ */
 exports.reservationStore = [
 	body("amount", "Amount must be integer.").isInt({ min: 1 }).trim(),
 	body("invoice.fullname", "Email not valid.").isLength({ min: 1 }).trim(),
@@ -21,26 +48,43 @@ exports.reservationStore = [
 		if (!errors.isEmpty()) {
 			return apiResponse.validationErrorWithData(res, errors.array()[0].msg, errors.array());
 		}
+		// CHECKSUM
+		var secretKey = process.env.VNP_HASHSECRET;
+		let params = { ...req.body };
+		let secureHash = req.body.secureHash;
+		delete params["secureHash"];
+		params = omitNullishObject(params);
+		// params = sortObject(params);
+		var signData = querystring.stringify(params, { encode: false });
+		var hmac = crypto.createHmac("sha512", secretKey);
+		var signed = hmac.update(signData).digest("hex");
+		if (signed == secureHash) {
+			const reservation = new Reservation(
+				omitNullishObject(
+					{
+						checkIn: getCheckInTimeToDate(req.body.checkIn),
+						checkOut: getCheckOutTimeToDate(req.body.checkOut),
+						amount: req.body.amount,
+						roomtype: req.body.roomtype,
+						invoice: req.body.invoice,
+						totalPrice: req.body.totalPrice,
+						orderId: req.body.orderId
+					}
+				)
+			);
+			ReservationService.create(reservation, (err) => {
+				if (err) return apiResponse.ErrorResponse(res, err);
+				return apiResponse.successResponse(res, "Reservation create success.");
+			});
+		} else {
+			return apiResponse.ErrorResponse(res, "Checksum fail.");
+		}
 
-		const reservation = new Reservation(
-			omitNullishObject(
-				{
-					checkIn: getCheckInTimeToDate(req.body.checkIn),
-					checkOut: getCheckOutTimeToDate(req.body.checkOut),
-					amount: req.body.amount,
-					roomtype: req.body.roomtype,
-					invoice: req.body.invoice,
-					totalPrice: req.body.totalPrice,
-					orderId: req.body.orderId
-				}
-			)
-		);
-		ReservationService.create(reservation, (err) => {
-			if (err) return apiResponse.ErrorResponse(res, err);
-			return apiResponse.successResponse(res, "Reservation create success.");
-		});
 	}
 ];
+/**
+ * Fetch list reservation by admin
+ */
 exports.reservationList = [
 	auth,
 	(req, res) => {
@@ -65,7 +109,9 @@ exports.reservationList = [
 		});
 	}
 ];
-
+/**
+ * Set status reservation to COMPLETED
+ */
 exports.checkout = [
 	auth,
 	authAdmin,
