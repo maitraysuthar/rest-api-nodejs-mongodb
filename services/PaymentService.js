@@ -200,7 +200,7 @@ exports.cancelPayment = (req, cb) => {
 				return cb(`Your request is in progress.`)
 			}
 			const allowCancel = isAllowCanceled(reservation)
-			if (!allowCancel) return cb(`Order not allow cancel.`)
+			if (!allowCancel) return cb(`Your request is expired (before checkin day at least ${process.env.RESERVATION_LIFE_CANCELED} days)`)
 
 			_updatePaymentStatus(vnp_Params["vnp_TxnRef"], RESERVATION_STATUS.PENDING_CANCELED, (error) => {
 				if (error) return cb(error)
@@ -215,7 +215,7 @@ exports.cancelPayment = (req, cb) => {
 }
 
 exports.refund = (req, cb) => {
-	ReservationService.changeStatus(req,cb)
+	ReservationService.changeStatus(req, cb)
 }
 
 function sortObject(obj) {
