@@ -135,9 +135,7 @@ exports.roomTypeSearch = (params, cb) => {
  */
 exports.roomTypeList = (user, cb) => {
 	// let currentDate = addDays(new Date(), )
-	let query = {
-		status: true
-	}
+	let query = {}
 	if (!isSuperAdmin(user)) {
 		query = {
 			...query,

@@ -184,7 +184,7 @@ exports.roomTypeDelete = [
             if (!foundRoomType) return apiResponse.notFoundResponse(res, "Room type not exists with this id");
             //update room type.
             RoomType.findByIdAndUpdate(req.params.id, {
-                status: false
+                status: !foundRoomType.status
             }, {}, function (err) {
                 if (err) {
                     return apiResponse.ErrorResponse(res, err);
