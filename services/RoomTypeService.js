@@ -11,7 +11,31 @@ const moment = MomentRange.extendMoment(Moment);
 const { getCheckInTimeToDate, getCheckOutTimeToDate } = require("../helpers/time");
 const { RESERVATION_STATUS } = require('../constants/index')
 const { min } = require("lodash");
-
+/**
+ * calculatate number of room available
+ * @param {*} reservations 
+ * @param {*} quantity 
+ * @returns number of room available
+ */
+const _calculateCapacity = (reservations = [], quantity) => {
+	const listAvai = []
+	reservations.reduce((ret, reservation, index) => {
+		if (index == 0) {
+			listAvai.push(quantity - reservation.amount)
+			return quantity - reservation.amount
+		}
+		const preRange = moment.range(reservations[index - 1].checkIn, reservations[index - 1].checkOut)
+		const range = moment.range(reservation.checkIn, reservation.checkOut)
+		if (preRange.overlaps(range)) {
+			listAvai.push(ret - reservation.amount)
+			return ret - reservation.amount
+		} else {
+			listAvai.push(ret + reservations[index - 1].amount - reservation.amount)
+			return ret + reservations[index - 1].amount - reservation.amount
+		}
+	}, quantity)
+	return min([...listAvai, quantity])
+}
 /**
  * Find room match with resort, checkIn, checkOut, maxAdult and available number of room
  * @param {*} params 
@@ -107,23 +131,7 @@ exports.roomTypeSearch = (params, cb) => {
 			docs.forEach(doc => {
 				const reservations = doc?.reservations || []
 
-				const listAvai = []
-				reservations.reduce((ret, reservation, index) => {
-					if (index == 0) {
-						listAvai.push(doc.quantity - reservation.amount)
-						return doc.quantity - reservation.amount
-					}
-					const preRange = moment.range(reservations[index - 1].checkIn, reservations[index - 1].checkOut)
-					const range = moment.range(reservation.checkIn, reservation.checkOut)
-					if (preRange.overlaps(range)) {
-						listAvai.push(ret - reservation.amount)
-						return ret - reservation.amount
-					} else {
-						listAvai.push(ret + reservations[index - 1].amount - reservation.amount)
-						return ret + reservations[index - 1].amount - reservation.amount
-					}
-				}, doc.quantity)
-				doc.capacity = min([...listAvai, doc.quantity])
+				doc.capacity = _calculateCapacity(reservations, doc.quantity)
 			})
 		}
 		return cb(error, docs)
@@ -187,23 +195,7 @@ exports.roomTypeList = (user, cb) => {
 				}
 			})
 
-			const listAvai = []
-			reservations.reduce((ret, reservation, index) => {
-				if (index == 0) {
-					listAvai.push(doc.quantity - reservation.amount)
-					return doc.quantity - reservation.amount
-				}
-				const preRange = moment.range(reservations[index - 1].checkIn, reservations[index - 1].checkOut)
-				const range = moment.range(reservation.checkIn, reservation.checkOut)
-				if (preRange.overlaps(range)) {
-					listAvai.push(ret - reservation.amount)
-					return ret - reservation.amount
-				} else {
-					listAvai.push(ret + reservations[index - 1].amount - reservation.amount)
-					return ret + reservations[index - 1].amount - reservation.amount
-				}
-			}, doc.quantity)
-			doc.capacity = min([...listAvai, doc.quantity])
+			doc.capacity = _calculateCapacity(reservations, doc.quantity)
 
 		})
 		return cb(error, docs)
@@ -295,23 +287,7 @@ exports.roomTypeDetail = (params, cb) => {
 			docs.forEach(doc => {
 				const reservations = doc?.reservations || []
 
-				const listAvai = []
-				reservations.reduce((ret, reservation, index) => {
-					if (index == 0) {
-						listAvai.push(doc.quantity - reservation.amount)
-						return doc.quantity - reservation.amount
-					}
-					const preRange = moment.range(reservations[index - 1].checkIn, reservations[index - 1].checkOut)
-					const range = moment.range(reservation.checkIn, reservation.checkOut)
-					if (preRange.overlaps(range)) {
-						listAvai.push(ret - reservation.amount)
-						return ret - reservation.amount
-					} else {
-						listAvai.push(ret + reservations[index - 1].amount - reservation.amount)
-						return ret + reservations[index - 1].amount - reservation.amount
-					}
-				}, doc.quantity)
-				doc.capacity = min([...listAvai, doc.quantity])
+				doc.capacity = _calculateCapacity(reservations, doc.quantity)
 			})
 			return cb(error, docs[0])
 		}
