@@ -9,6 +9,7 @@ const MomentRange = require("moment-range");
 const moment = MomentRange.extendMoment(Moment);
 
 const { getCheckInTimeToDate, getCheckOutTimeToDate } = require("../helpers/time");
+const { RESERVATION_STATUS } = require('../constants/index')
 const { min } = require("lodash");
 
 /**
@@ -56,7 +57,7 @@ exports.roomTypeSearch = (params, cb) => {
 									$eq: ['$roomtype', '$$id']
 								},
 								{
-									$eq: ['$status', 1]
+									$in: ['$status', [RESERVATION_STATUS.PENDING_COMPLETED, RESERVATION_STATUS.PENDING_CANCELED]]
 								},
 								{
 									$or: [
@@ -165,7 +166,7 @@ exports.roomTypeList = (user, cb) => {
 									$eq: ['$roomtype', '$$id'],
 								},
 								{
-									$eq: ['$status', 1]
+									$in: ['$status', [RESERVATION_STATUS.PENDING_COMPLETED, RESERVATION_STATUS.PENDING_CANCELED]]
 								}
 							]
 						}
@@ -245,7 +246,7 @@ exports.roomTypeDetail = (params, cb) => {
 									$eq: ['$roomtype', '$$id']
 								},
 								{
-									$eq: ['$status', 1]
+									$in: ['$status', [RESERVATION_STATUS.PENDING_COMPLETED, RESERVATION_STATUS.PENDING_CANCELED]]
 								},
 								{
 									$or: [
