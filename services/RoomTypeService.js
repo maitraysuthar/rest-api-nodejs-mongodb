@@ -143,7 +143,6 @@ exports.roomTypeSearch = (params, cb) => {
  * @param {*} cb 
  */
 exports.roomTypeList = (user, cb) => {
-	// let currentDate = addDays(new Date(), )
 	let query = {}
 	if (!isSuperAdmin(user)) {
 		query = {

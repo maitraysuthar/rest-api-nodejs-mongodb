@@ -14,6 +14,11 @@ var apiRouter = require("./routes/api");
 var apiResponse = require("./helpers/apiResponse");
 var cors = require("cors");
 
+var moment = require("moment-timezone");
+//
+moment.tz.setDefault("Asia/Ho_Chi_Minh");
+
+
 // DB connection
 var MONGODB_URL = process.env.MONGODB_URL;
 var mongoose = require("mongoose");

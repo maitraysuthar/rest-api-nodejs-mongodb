@@ -1,5 +1,8 @@
 var mongoose = require("mongoose");
+var moment = require("moment");
+
 var { RESERVATION_STATUS } = require("../constants/index");
+
 var Schema = mongoose.Schema;
 
 var InvoiceSchame = mongoose.Schema({
@@ -33,37 +36,39 @@ var ReservationSchema = new Schema({
 
 ReservationSchema.pre("save", function (next) {
 	this.history = {
-		pendingPayment: new Date()
+		pendingPayment: moment(moment.now()).toDate()
 	};
 	return next();
 });
 
 ReservationSchema.pre("findOneAndUpdate", async function (next) {
 	const status = this.getUpdate().status;
+	const now = moment(moment.now()).toDate();
+
 	if (status == null) return next();
 
 	if (status == RESERVATION_STATUS.REJECTED) {
-		this.set("history.rejectedTime", new Date());
+		this.set("history.rejectedTime", now);
 	}
 	if (status == RESERVATION_STATUS.REFUNDED) {
-		this.set("history.refundedTime", new Date());
+		this.set("history.refundedTime", now);
 	}
 	if (status == RESERVATION_STATUS.COMPLETED) {
-		this.set("history.completedTime", new Date());
+		this.set("history.completedTime", now);
 	}
 	if (status == RESERVATION_STATUS.CANCELED) {
-		this.set("history.canceledTime", new Date());
+		this.set("history.canceledTime", now);
 	}
 	if (status == RESERVATION_STATUS.PENDING_CANCELED) {
-		this.set("history.penddingCanceledTime", new Date());
+		this.set("history.penddingCanceledTime", now);
 	}
 	if (status == RESERVATION_STATUS.PENDING_REFUNDED) {
-		this.set("history.pendingRefundedTime", new Date());
+		this.set("history.pendingRefundedTime", now);
 	}
 	if (status == RESERVATION_STATUS.PENDING_COMPLETED) {
-		this.set("history.penddingCompletedTime", new Date());
+		this.set("history.penddingCompletedTime", now);
 	}
-	
+
 	return next();
 });
 

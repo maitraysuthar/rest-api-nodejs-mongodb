@@ -28,7 +28,7 @@ exports.getUrl = (req) => {
 	var orderType = process.env.VNP_ORDER_TYPE;
 	var returnUrl = process.env.VNP_RETURN_URL;
 
-	var date = new Date();
+	var date = moment(moment.now()).toDate();
 
 	var createDate = moment(date).format("YYYYMMDDHHmmss");
 	var orderId = nanoid();
