@@ -60,6 +60,10 @@ ReservationSchema.pre("findOneAndUpdate", async function (next) {
 	if (status == RESERVATION_STATUS.PENDING_REFUNDED) {
 		this.set("history.pendingRefundedTime", new Date());
 	}
+	if (status == RESERVATION_STATUS.PENDING_COMPLETED) {
+		this.set("history.penddingCompletedTime", new Date());
+	}
+	
 	return next();
 });
 
