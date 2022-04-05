@@ -1,3 +1,15 @@
+[![SonarCloud](https://sonarcloud.io/images/project_badges/sonarcloud-white.svg)](https://sonarcloud.io/summary/new_code?id=aliartiza75_rest-api-nodejs-mongodb)
+
+
+[![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=aliartiza75_rest-api-nodejs-mongodb&metric=ncloc)](https://sonarcloud.io/summary/new_code?id=aliartiza75_rest-api-nodejs-mongodb)
+[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=aliartiza75_rest-api-nodejs-mongodb&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=aliartiza75_rest-api-nodejs-mongodb)
+[![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=aliartiza75_rest-api-nodejs-mongodb&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=aliartiza75_rest-api-nodejs-mongodb)
+[![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=aliartiza75_rest-api-nodejs-mongodb&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=aliartiza75_rest-api-nodejs-mongodb)
+[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=aliartiza75_rest-api-nodejs-mongodb&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=aliartiza75_rest-api-nodejs-mongodb)
+[![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=aliartiza75_rest-api-nodejs-mongodb&metric=vulnerabilities)](https://sonarcloud.io/summary/new_code?id=aliartiza75_rest-api-nodejs-mongodb)
+
+
+
 # Nodejs Expressjs MongoDB Ready-to-use API Project Structure
 [![Author](http://img.shields.io/badge/author-@maitraysuthar-blue.svg)](https://www.linkedin.com/in/maitray-suthar/) [![GitHub license](https://img.shields.io/github/license/maitraysuthar/rest-api-nodejs-mongodb.svg)](https://github.com/maitraysuthar/rest-api-nodejs-mongodb/blob/master/LICENSE)  ![GitHub repo size](https://img.shields.io/github/repo-size/maitraysuthar/rest-api-nodejs-mongodb) [![Codacy Badge](https://api.codacy.com/project/badge/Coverage/b3eb80984adc4671988ffb22d6ad83df)](https://www.codacy.com/manual/maitraysuthar/rest-api-nodejs-mongodb?utm_source=github.com&utm_medium=referral&utm_content=maitraysuthar/rest-api-nodejs-mongodb&utm_campaign=Badge_Coverage) [![Codacy Badge](https://api.codacy.com/project/badge/Grade/b3eb80984adc4671988ffb22d6ad83df)](https://www.codacy.com/manual/maitraysuthar/rest-api-nodejs-mongodb?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=maitraysuthar/rest-api-nodejs-mongodb&amp;utm_campaign=Badge_Grade) ![Travis (.com)](https://img.shields.io/travis/com/maitraysuthar/rest-api-nodejs-mongodb)
 
