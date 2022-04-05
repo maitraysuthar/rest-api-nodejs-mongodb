@@ -1,12 +1,16 @@
 [![SonarCloud](https://sonarcloud.io/images/project_badges/sonarcloud-white.svg)](https://sonarcloud.io/summary/new_code?id=aliartiza75_rest-api-nodejs-mongodb)
 
 
+[![Quality gate](https://sonarcloud.io/api/project_badges/quality_gate?project=aliartiza75_rest-api-nodejs-mongodb)](https://sonarcloud.io/summary/new_code?id=aliartiza75_rest-api-nodejs-mongodb)
+
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=aliartiza75_rest-api-nodejs-mongodb&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=aliartiza75_rest-api-nodejs-mongodb)
 [![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=aliartiza75_rest-api-nodejs-mongodb&metric=ncloc)](https://sonarcloud.io/summary/new_code?id=aliartiza75_rest-api-nodejs-mongodb)
 [![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=aliartiza75_rest-api-nodejs-mongodb&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=aliartiza75_rest-api-nodejs-mongodb)
 [![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=aliartiza75_rest-api-nodejs-mongodb&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=aliartiza75_rest-api-nodejs-mongodb)
 [![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=aliartiza75_rest-api-nodejs-mongodb&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=aliartiza75_rest-api-nodejs-mongodb)
 [![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=aliartiza75_rest-api-nodejs-mongodb&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=aliartiza75_rest-api-nodejs-mongodb)
 [![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=aliartiza75_rest-api-nodejs-mongodb&metric=vulnerabilities)](https://sonarcloud.io/summary/new_code?id=aliartiza75_rest-api-nodejs-mongodb)
+
 
 
 # Nodejs Expressjs MongoDB Ready-to-use API Project Structure
