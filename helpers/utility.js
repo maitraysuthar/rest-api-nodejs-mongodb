@@ -1,4 +1,4 @@
-const { pickBy, isNil, negate } = require("lodash");
+const { pickBy, isNil, negate, flatten } = require("lodash");
 const fs = require("fs");
 
 /**
@@ -34,3 +34,24 @@ exports.deleteFiles = (files, callback) => {
 };
 
 exports.contains = (arr1, mainObj) => arr1.some(el => el in mainObj);
+/**
+ * Generate all combinations of an array.
+ * @param {Array} sourceArray - Array of input elements.
+ * @param {number} min - min Desired length of combinations.
+ * @param {number} max - max Desired length of combinations.
+ * @return {Array} Array of combination arrays.
+ */
+exports.generateCombinations = (arr, min = 1, max) => {
+	const combination = (arr, depth) => {
+		if (depth === 1) {
+			return arr.map(e => [e]);
+		} else {
+			const result = combination(arr, depth - 1).flatMap((val) =>
+				arr.map((char) => flatten([val, char]))
+			);
+			return arr.concat(result);
+		}
+	};
+
+	return combination(arr, max).filter((val) => val.length >= min);
+};

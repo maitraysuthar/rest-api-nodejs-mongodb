@@ -116,6 +116,15 @@ exports.roomTypeSearch = [
         })
     }
 ]
+
+exports.getRoomTypeSuggestion = [
+    (req, res) => {
+        RoomTypeService.getRoomTypeSuggestion(req.body, (error, rooms) => {
+            return apiResponse.successResponseWithData(res, "Operation success", rooms);
+        })
+    }
+]
+
 exports.roomTypeUpdate = [
     auth,
     authAdmin,

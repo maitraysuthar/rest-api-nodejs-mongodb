@@ -3,14 +3,16 @@ const RoomType = require("../models/RoomTypeModel");
 const _ = require("lodash");
 var mongoose = require("mongoose");
 const Moment = require("moment");
-
+const { min } = require("lodash");
 const MomentRange = require("moment-range");
 
-const moment = MomentRange.extendMoment(Moment);
 
 const { getCheckInTimeToDate, getCheckOutTimeToDate } = require("../helpers/time");
 const { RESERVATION_STATUS } = require('../constants/index')
-const { min } = require("lodash");
+const { generateCombinations } = require("../helpers/utility");
+
+const moment = MomentRange.extendMoment(Moment);
+
 /**
  * calculatate number of room available
  * @param {*} reservations 
@@ -36,6 +38,149 @@ const _calculateCapacity = (reservations = [], quantity) => {
 	}, quantity)
 	return min([...listAvai, quantity])
 }
+exports.getRoomTypeSuggestion = (params, cb) => {
+	let checkIn = getCheckInTimeToDate(params.checkIn)
+	let checkOut = getCheckOutTimeToDate(params.checkOut)
+
+	let adult = Number(params.adult)
+	let children = Number(params.children)
+	let amount = Number(params.amount)
+
+	const aggregate = RoomType.aggregate()
+		.match({
+			$and: [
+				{
+					resort: {
+						$in: _.flatten([params.resort]).map(id => mongoose.Types.ObjectId(id))
+					}
+				},
+				{
+					status: true
+				}
+			]
+		})
+		.lookup({ from: "resorts", "localField": "resort", foreignField: "_id", as: "resort" })
+		.unwind({
+			path: '$resort',
+		})
+		.lookup({
+			from: "reservations",
+			as: "reservations",
+			let: {
+				id: '$_id'
+			},
+			pipeline: [
+				{
+					$match: {
+						$expr: {
+							$and: [
+								{
+									$eq: ['$roomtype', '$$id']
+								},
+								{
+									$in: ['$status', [RESERVATION_STATUS.PENDING_COMPLETED, RESERVATION_STATUS.PENDING_CANCELED]]
+								},
+								{
+									$or: [
+
+										{
+											$and: [
+												{
+													$gt: [checkIn, "$checkIn"]
+												},
+												{
+													$lt: [checkIn, "$checkOut"]
+												},
+											]
+										},
+										{
+											$and: [
+												{
+													$gt: [checkOut, "$checkIn"]
+												},
+												{
+													$lt: [checkOut, "$checkOut"]
+												},
+											]
+										},
+										{
+											$and: [
+												{
+													$gt: [checkOut, "$checkOut"]
+												},
+												{
+													$lt: [checkIn, "$checkIn"]
+												},
+											]
+										},
+									]
+								}
+							]
+						}
+					}
+				}
+			]
+		});
+
+	aggregate.exec((error, rooms) => {
+		if (error) return cb(error)
+		// Cal number of room available
+		rooms.forEach(doc => {
+			const reservations = doc?.reservations || []
+
+			rooms.capacity = _calculateCapacity(reservations, doc.quantity)
+		})
+
+		const combinations = generateCombinations(rooms, amount, amount)
+		// Filter combind available room
+		const combinationsAvailable = combinations.filter(comb => {
+			const group = _.groupBy(comb, '_id')
+			for (const key in group) {
+				const numberOfRoom = group[key].length
+				if (group[key][0].capacity <= numberOfRoom) {
+					return false
+				}
+			}
+			return true
+		})
+		// Filter combind valid with adult, children
+		const combindSuggest = combinationsAvailable.filter(rooms => {
+			return _validatePeople(rooms, adult, children)
+		})
+		// Find combind cheapest
+		let bestSuggest = _.minBy(combindSuggest, (rr) => {
+			const price = rr.reduce((ret, r) => {
+				return ret + r.price - r.sale * r.price / 100
+			}, 0)
+			return price
+		})
+		// Format room with amount
+		let ret = Object.values(_.groupBy(bestSuggest, '_id'))
+		ret = ret.map(room => ({
+			...room[0],
+			amount: room.length
+		}))
+		return cb(error, ret)
+	});
+}
+/**
+ * Verify reservation match valid with adult,children
+ * @param {*} rooms 
+ * @param {*} adult 
+ * @param {*} children 
+ * @returns 
+ */
+const _validatePeople = (rooms = [], adult = 1, children = 0) => {
+	const { maxAdult, maxChildren } = rooms.reduce((ret, room) => {
+		return {
+			maxAdult: ret.maxAdult + room.maxAdult,
+			maxChildren: ret.maxChildren + room.maxChildren
+		}
+	}, { maxAdult: 0, maxChildren: 0 })
+	if (maxAdult >= adult && maxChildren >= children) return true
+	if (maxChildren < children && maxAdult - adult >= children - maxChildren) return true
+	return false
+}
 /**
  * Find room match with resort, checkIn, checkOut, maxAdult and available number of room
  * @param {*} params 
@@ -50,11 +195,6 @@ exports.roomTypeSearch = (params, cb) => {
 				{
 					resort: {
 						$in: _.flatten([params.resort]).map(id => mongoose.Types.ObjectId(id))
-					}
-				},
-				{
-					maxAdult: {
-						$gte: Number(params.maxAdult)
 					}
 				},
 				{
