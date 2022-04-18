@@ -132,22 +132,23 @@ exports.updatePayment = (req, cb) => {
 			if (!reservation) {
 				return cb(`Order id: ${vnp_Params["vnp_TxnRef"]} not exist.`);
 			}
-			// Check amount room has available
-			RoomTypeService.roomTypeDetail({
-				roomtype: reservation.roomtype,
-				checkIn: reservation.checkIn,
-				checkOut: reservation.checkOut
-			}, (err, room) => {
-				if (err) return cb(err?.message)
+			// Verify amount per room
+			Promise.all(reservation.rooms.map(r => {
+				return new Promise((resolve, reject) => {
+					RoomTypeService.roomTypeDetail({
+						roomtype: r.roomId,
+						checkIn: reservation.checkIn,
+						checkOut: reservation.checkOut
+					}, (err, room) => {
+						if (err) return reject(err?.message)
 
-				if (reservation.amount > room.capacity) {
-					// Update reservation to refund
-					return _updatePaymentStatus(vnp_Params["vnp_TxnRef"], RESERVATION_STATUS.PENDING_REFUNDED, (error) => {
-						if (error) return cb(error);
-						return cb(`Your room occupy. We will refund your money. Please choose other room.`);
+						if (r.amount > room.capacity) {
+							return reject('Room occupy')
+						}
+						return resolve()
 					})
-				}
-
+				})
+			})).then(() => {
 				// Update reservation to booked
 				return _updatePaymentStatus(vnp_Params["vnp_TxnRef"], RESERVATION_STATUS.PENDING_COMPLETED, (error) => {
 					if (error) return cb(error);
@@ -168,7 +169,12 @@ exports.updatePayment = (req, cb) => {
 
 					return cb(null, "Payment success.", reservation);
 				})
-
+			}).catch(() => {
+				// Update reservation to refund
+				return _updatePaymentStatus(vnp_Params["vnp_TxnRef"], RESERVATION_STATUS.PENDING_REFUNDED, (error) => {
+					if (error) return cb(error);
+					return cb(`Your room occupy. We will refund your money. Please choose other room.`);
+				})
 			})
 		});
 	} else {

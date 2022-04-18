@@ -14,7 +14,6 @@ const { authAdmin } = require("../middlewares/role");
  * Sign body
  */
 exports.sign = [
-	body("amount", "Amount must be integer.").isInt({ min: 1 }).trim(),
 	body("invoice.fullname", "Email not valid.").isLength({ min: 1 }).trim(),
 	body("invoice.email", "Email not valid.").isEmail().trim(),
 	body("invoice.phone", "Phone not valid.").isMobilePhone().trim(),
@@ -37,7 +36,6 @@ exports.sign = [
  * Create reservation with status pendding payment
  */
 exports.reservationStore = [
-	body("amount", "Amount must be integer.").isInt({ min: 1 }).trim(),
 	body("invoice.fullname", "Email not valid.").isLength({ min: 1 }).trim(),
 	body("invoice.email", "Email not valid.").isEmail().trim(),
 	body("invoice.phone", "Phone not valid.").isMobilePhone().trim(),
@@ -64,8 +62,7 @@ exports.reservationStore = [
 					{
 						checkIn: getCheckInTimeToDate(req.body.checkIn),
 						checkOut: getCheckOutTimeToDate(req.body.checkOut),
-						amount: req.body.amount,
-						roomtype: req.body.roomtype,
+						rooms: req.body.rooms,
 						invoice: req.body.invoice,
 						totalPrice: req.body.totalPrice,
 						orderId: req.body.orderId
@@ -90,7 +87,7 @@ exports.reservationList = [
 	(req, res) => {
 		let query = {};
 		Reservation.find(query).populate({
-			path: "roomtype",
+			path: "rooms.roomId",
 			model: "RoomType",
 			populate: {
 				path: "resort",

@@ -22,8 +22,13 @@ var History = mongoose.Schema({
 	pendingPayment: { type: Date }
 });
 
+var Room = mongoose.Schema({
+	roomId: { type: Schema.ObjectId, ref: "RoomType", required: true },
+	amount: { type: Number, required: true, default: 1 }
+});
+
 var ReservationSchema = new Schema({
-	roomtype: { type: Schema.ObjectId, ref: "RoomType", required: true },
+	rooms: [Room],
 	checkIn: { type: Date, required: true },
 	checkOut: { type: Date, required: true },
 	amount: { type: Number, required: true, default: 1 },

@@ -10,43 +10,56 @@ const { max } = require('lodash')
  * @param {*} cb 
  */
 exports.create = (reservation, cb) => {
-	RoomTypeService.roomTypeDetail({
-		roomtype: reservation.roomtype,
-		checkIn: reservation.checkIn,
-		checkOut: reservation.checkOut
-	}, (error, room) => {
-		if (error) return cb(error);
+	// Check valid rooms
+	const isRoomValid = (roomtype, reservation) => {
+		return new Promise((resolve, reject) => {
+			RoomTypeService.roomTypeDetail({
+				roomtype: roomtype,
+				checkIn: reservation.checkIn,
+				checkOut: reservation.checkOut
+			}, (error, room) => {
+				if (error) return cb(error);
 
-		// Validate checkin checkout
-		if (moment(reservation.checkIn).isBefore(moment.now(), 'day')) {
-			return cb(`The checkIn must be greater than or equal now`);
-		}
+				// Validate checkin checkout
+				if (moment(reservation.checkIn).isBefore(moment.now(), 'day')) {
+					return reject(`The checkIn must be greater than or equal now`);
+				}
 
-		if (moment(reservation.checkIn).isSame(reservation.checkOut, 'day') || moment(reservation.checkIn).isAfter(reservation.checkOut, 'day')) {
-			return cb(`The checkIn must be greater checkOut`);
-		}
+				if (moment(reservation.checkIn).isSame(reservation.checkOut, 'day') || moment(reservation.checkIn).isAfter(reservation.checkOut, 'day')) {
+					return reject(`The checkIn must be greater checkOut`);
+				}
 
-		// Validate resort have blocked
-		if (!room?.resort?.status) {
-			return cb(`The resort ${room?.resort?.name} had blocked`);
-		}
+				// Validate resort have blocked
+				if (!room?.resort?.status) {
+					return reject(`The resort ${room?.resort?.name} had blocked`);
+				}
 
-		// Validate price
-		const days = Math.round(Math.abs(moment.duration(moment(reservation.checkIn).diff(moment(reservation.checkOut))).asDays()));
-		if (reservation.totalPrice !== (room.price - (room.price * room.sale) / 100) * days * reservation.amount) {
-			return cb("Total price invalid");
-		}
-		// Validate amount
-		const capacity = room.capacity
-		if (reservation.amount > capacity) {
-			return cb("Room amount invalid");
-		}
-		reservation.save().then(() => {
-			return cb(null);
-		}, (err) => {
-			return cb(err?.message);
-		});
-	});
+				// // Validate price
+				// const days = Math.round(Math.abs(moment.duration(moment(reservation.checkIn).diff(moment(reservation.checkOut))).asDays()));
+				// if (reservation.totalPrice !== (room.price - (room.price * room.sale) / 100) * days * reservation.amount) {
+				// 	return reject("Total price invalid");
+				// }
+				// Validate amount
+				const capacity = room.capacity
+				if (reservation.amount > capacity) {
+					return reject("Room amount invalid");
+				}
+				reservation.save().then(() => {
+					return resolve(null);
+				}, (err) => {
+					return reject(err?.message);
+				});
+			});
+		})
+	}
+	Promise.all(reservation.rooms.map(r => {
+		return isRoomValid(r.roomId, reservation)
+	})).then(() => {
+		cb(null, 'oke')
+	}).catch(error => {
+		cb(error?.message)
+	})
+
 };
 
 exports.changeStatus = (req, cb) => {

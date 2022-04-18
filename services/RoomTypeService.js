@@ -3,7 +3,7 @@ const RoomType = require("../models/RoomTypeModel");
 const _ = require("lodash");
 var mongoose = require("mongoose");
 const Moment = require("moment");
-const { min } = require("lodash");
+const { min, max } = require("lodash");
 const MomentRange = require("moment-range");
 
 
@@ -19,25 +19,31 @@ const moment = MomentRange.extendMoment(Moment);
  * @param {*} quantity 
  * @returns number of room available
  */
-const _calculateCapacity = (reservations = [], quantity) => {
+const _calculateCapacity = (reservations = [], doc) => {
 	const listAvai = []
+	const quantity = doc.quantity
 	reservations.reduce((ret, reservation, index) => {
+		const amount = reservation.rooms.find(r => r.roomId.toString() == doc._id.toString())?.amount || 0
 		if (index == 0) {
-			listAvai.push(quantity - reservation.amount)
-			return quantity - reservation.amount
+			listAvai.push(quantity - amount)
+			return quantity - amount
 		}
 		const preRange = moment.range(reservations[index - 1].checkIn, reservations[index - 1].checkOut)
 		const range = moment.range(reservation.checkIn, reservation.checkOut)
 		if (preRange.overlaps(range)) {
-			listAvai.push(ret - reservation.amount)
-			return ret - reservation.amount
+			listAvai.push(ret - amount)
+			return ret - amount
 		} else {
-			listAvai.push(ret + reservations[index - 1].amount - reservation.amount)
-			return ret + reservations[index - 1].amount - reservation.amount
+			listAvai.push(ret + reservations[index - 1].amount - amount)
+			return ret + reservations[index - 1].amount - amount
 		}
 	}, quantity)
-	return min([...listAvai, quantity])
+	return max([
+		min([...listAvai, quantity]),
+		0
+	])
 }
+
 exports.getRoomTypeSuggestion = (params, cb) => {
 	let checkIn = getCheckInTimeToDate(params.checkIn)
 	let checkOut = getCheckOutTimeToDate(params.checkOut)
@@ -75,18 +81,20 @@ exports.getRoomTypeSuggestion = (params, cb) => {
 						$expr: {
 							$and: [
 								{
-									$eq: ['$roomtype', '$$id']
+									$in: [
+										'$$id',
+										"$rooms.roomId",
+									]
 								},
 								{
 									$in: ['$status', [RESERVATION_STATUS.PENDING_COMPLETED, RESERVATION_STATUS.PENDING_CANCELED]]
 								},
 								{
 									$or: [
-
 										{
 											$and: [
 												{
-													$gt: [checkIn, "$checkIn"]
+													$gte: [checkIn, "$checkIn"]
 												},
 												{
 													$lt: [checkIn, "$checkOut"]
@@ -99,7 +107,7 @@ exports.getRoomTypeSuggestion = (params, cb) => {
 													$gt: [checkOut, "$checkIn"]
 												},
 												{
-													$lt: [checkOut, "$checkOut"]
+													$lte: [checkOut, "$checkOut"]
 												},
 											]
 										},
@@ -128,7 +136,7 @@ exports.getRoomTypeSuggestion = (params, cb) => {
 		rooms.forEach(doc => {
 			const reservations = doc?.reservations || []
 
-			rooms.capacity = _calculateCapacity(reservations, doc.quantity)
+			doc.capacity = _calculateCapacity(reservations, doc)
 		})
 
 		const combinations = generateCombinations(rooms, amount, amount)
@@ -189,6 +197,7 @@ const _validatePeople = (rooms = [], adult = 1, children = 0) => {
 exports.roomTypeSearch = (params, cb) => {
 	let checkIn = getCheckInTimeToDate(params.checkIn)
 	let checkOut = getCheckOutTimeToDate(params.checkOut)
+
 	const aggregate = RoomType.aggregate()
 		.match({
 			$and: [
@@ -218,18 +227,20 @@ exports.roomTypeSearch = (params, cb) => {
 						$expr: {
 							$and: [
 								{
-									$eq: ['$roomtype', '$$id']
+									$in: [
+										'$$id',
+										"$rooms.roomId",
+									]
 								},
 								{
 									$in: ['$status', [RESERVATION_STATUS.PENDING_COMPLETED, RESERVATION_STATUS.PENDING_CANCELED]]
 								},
 								{
 									$or: [
-
 										{
 											$and: [
 												{
-													$gt: [checkIn, "$checkIn"]
+													$gte: [checkIn, "$checkIn"]
 												},
 												{
 													$lt: [checkIn, "$checkOut"]
@@ -242,7 +253,7 @@ exports.roomTypeSearch = (params, cb) => {
 													$gt: [checkOut, "$checkIn"]
 												},
 												{
-													$lt: [checkOut, "$checkOut"]
+													$lte: [checkOut, "$checkOut"]
 												},
 											]
 										},
@@ -271,7 +282,7 @@ exports.roomTypeSearch = (params, cb) => {
 			docs.forEach(doc => {
 				const reservations = doc?.reservations || []
 
-				doc.capacity = _calculateCapacity(reservations, doc.quantity)
+				doc.capacity = _calculateCapacity(reservations, doc)
 			})
 		}
 		return cb(error, docs)
@@ -310,7 +321,10 @@ exports.roomTypeList = (user, cb) => {
 						$expr: {
 							$and: [
 								{
-									$eq: ['$roomtype', '$$id'],
+									$in: [
+										'$$id',
+										"$rooms.roomId",
+									]
 								},
 								{
 									$in: ['$status', [RESERVATION_STATUS.PENDING_COMPLETED, RESERVATION_STATUS.PENDING_CANCELED]]
@@ -334,7 +348,7 @@ exports.roomTypeList = (user, cb) => {
 				}
 			})
 
-			doc.capacity = _calculateCapacity(reservations, doc.quantity)
+			doc.capacity = _calculateCapacity(reservations, doc)
 
 		})
 		return cb(error, docs)
@@ -374,18 +388,20 @@ exports.roomTypeDetail = (params, cb) => {
 						$expr: {
 							$and: [
 								{
-									$eq: ['$roomtype', '$$id']
+									$in: [
+										'$$id',
+										"$rooms.roomId",
+									]
 								},
 								{
 									$in: ['$status', [RESERVATION_STATUS.PENDING_COMPLETED, RESERVATION_STATUS.PENDING_CANCELED]]
 								},
 								{
 									$or: [
-
 										{
 											$and: [
 												{
-													$gt: [checkIn, "$checkIn"]
+													$gte: [checkIn, "$checkIn"]
 												},
 												{
 													$lt: [checkIn, "$checkOut"]
@@ -398,7 +414,7 @@ exports.roomTypeDetail = (params, cb) => {
 													$gt: [checkOut, "$checkIn"]
 												},
 												{
-													$lt: [checkOut, "$checkOut"]
+													$lte: [checkOut, "$checkOut"]
 												},
 											]
 										},
@@ -426,7 +442,7 @@ exports.roomTypeDetail = (params, cb) => {
 			docs.forEach(doc => {
 				const reservations = doc?.reservations || []
 
-				doc.capacity = _calculateCapacity(reservations, doc.quantity)
+				doc.capacity = _calculateCapacity(reservations, doc)
 			})
 			return cb(error, docs[0])
 		}
