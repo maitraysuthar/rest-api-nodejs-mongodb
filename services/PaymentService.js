@@ -4,7 +4,7 @@ const crypto = require("crypto");
 const fs = require("fs");
 const path = require("path");
 const nunjucks = require("nunjucks");
-const { nanoid } = require('nanoid')
+const { customAlphabet } = require('nanoid')
 
 const mailer = require("../helpers/mailer");
 const { constants } = require("../helpers/constants");
@@ -14,6 +14,7 @@ const { RESERVATION_STATUS } = require("../constants/index");
 const RoomTypeService = require('../services/RoomTypeService');
 const ReservationService = require('../services/ReservationService')
 const { isAllowCanceled } = require("../helpers/time");
+const nanoIdAlphabet = customAlphabet('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz', 6)
 
 exports.getUrl = (req) => {
 	const amount = req.body.amount;
@@ -31,8 +32,7 @@ exports.getUrl = (req) => {
 	var date = moment(moment.now()).toDate();
 
 	var createDate = moment(date).format("YYYYMMDDHHmmss");
-	var orderId = nanoid();
-
+	var orderId = nanoIdAlphabet();
 	var bankCode = req.body.bankCode;
 
 	var orderInfo = req.body.orderDescription;
