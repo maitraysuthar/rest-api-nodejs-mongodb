@@ -161,8 +161,7 @@ exports.updatePayment = (req, cb) => {
 							order_id: vnp_Params["vnp_TxnRef"],
 							checkIn: `Check in sau 3 giờ ${moment(reservation.checkIn).format('DD-MM-YYY')}`,
 							checkOut: `Check out trước 12 giờ ${moment(reservation.checkOut).format('DD-MM-YYY')}`,
-							totalPrice: `${reservation.totalPrice} VNĐ`,
-							cancelLink: process.env.CANCELED_URL + "?" + querystring.stringify({ ...vnp_Params, vnp_SecureHash: secureHash }, { encode: false })
+							totalPrice: `${reservation.totalPrice} VNĐ`
 						}
 					);
 					mailer.send(constants.confirmEmails.from, reservation?.invoice?.email, "Booking sucessfull", html);
