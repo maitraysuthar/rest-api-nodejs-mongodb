@@ -14,16 +14,8 @@ const { authAdmin } = require("../middlewares/role");
  * Sign body
  */
 exports.sign = [
-	body("invoice.fullname", "Email not valid.").isLength({ min: 1 }).trim(),
-	body("invoice.email", "Email not valid.").isEmail().trim(),
-	body("invoice.phone", "Phone not valid.").isMobilePhone().trim(),
-	body("totalPrice", "Total price must be integer").isInt({ min: 1 }).trim(),
 	(req, res) => {
 		var secretKey = process.env.VNP_HASHSECRET;
-		const errors = validationResult(req);
-		if (!errors.isEmpty()) {
-			return apiResponse.validationErrorWithData(res, errors.array()[0].msg, errors.array());
-		}
 		let params = omitNullishObject(req.body);
 		// params = sortObject(params);
 		var signData = querystring.stringify(params, { encode: false });

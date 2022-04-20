@@ -182,32 +182,31 @@ exports.updatePayment = (req, cb) => {
 };
 
 exports.cancelPayment = (req, cb) => {
-	var vnp_Params = req.query;
+	var params = req.query;
 
-	var secureHash = vnp_Params["vnp_SecureHash"];
+	var secureHash = params["secureHash"];
 
-	delete vnp_Params["vnp_SecureHash"];
-	delete vnp_Params["vnp_SecureHashType"];
+	delete params["secureHash"];
 
-	vnp_Params = sortObject(vnp_Params);
 
 	var secretKey = process.env.VNP_HASHSECRET;
 
-	var signData = querystring.stringify(vnp_Params, { encode: false });
+	var signData = querystring.stringify(params, { encode: false });
 	var hmac = crypto.createHmac("sha512", secretKey);
 	var signed = hmac.update(new Buffer(signData, "utf-8")).digest("hex");
+
 	if (secureHash === signed) {
 		Reservation.findOne({
-			orderId: vnp_Params["vnp_TxnRef"]
+			_id: params['id']
 		}).then((reservation) => {
-			if (!reservation) return cb(`Order ${vnp_Params["vnp_TxnRef"]} not exist.`)
-			if (reservation.status === RESERVATION_STATUS.PENDING_CANCELED) {
+			if (!reservation) return cb(`Order ${params["orderId"]} not exist.`)
+			if (reservation.status === RESERVATION_STATUS.CANCELED) {
 				return cb(`Your request is in progress.`)
 			}
 			const allowCancel = isAllowCanceled(reservation)
 			if (!allowCancel) return cb(`Your request is expired (before checkin day at least ${process.env.RESERVATION_LIFE_CANCELED} days)`)
 
-			_updatePaymentStatus(vnp_Params["vnp_TxnRef"], RESERVATION_STATUS.PENDING_CANCELED, (error) => {
+			_updatePaymentStatus(reservation["orderId"], RESERVATION_STATUS.CANCELED, (error) => {
 				if (error) return cb(error)
 				return cb(null, 'Reservation pendding canceled.')
 			})

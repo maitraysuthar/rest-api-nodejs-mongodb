@@ -27,6 +27,8 @@ exports.vnpIpn = [
 ];
 
 exports.requestCancel = [
+	auth,
+	authAdmin,
 	(req, res) => {
 		PaymentService.cancelPayment(req, (error) => {
 			if (error) return apiResponse.ErrorResponse(res, error);
