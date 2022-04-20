@@ -17,7 +17,9 @@ function RoomTypeData(data) {
         resort: data.resort
     };
 }
-
+/**
+ * New Room
+ */
 exports.roomTypeStore = [
     auth,
     authAdmin,
@@ -26,12 +28,11 @@ exports.roomTypeStore = [
         const rooms = req.body.resort.split(',').map(resort => new RoomType(omitNullishObject({
             name: req.body.name,
             resort,
-            quantity: req.body.quantity,
             price: req.body.price,
             maxAdult: req.body.maxAdult,
             maxChildren: req.body.maxChildren,
-            allowCrypto: !!req.body.allowCrypto,
-            capacity: req.body.quantity,
+            cryptoRoom: req.body.cryptoRoom,
+            paymentRoom: req.body.paymentRoom,
             imgs: req?.files?.map(f => f.path),
             description: req.body?.description,
             sale: Number(req.body?.sale) || undefined
@@ -56,6 +57,9 @@ exports.roomTypeStore = [
         })
     }
 ];
+/**
+ * Fetch list room by admin
+ */
 exports.roomTypeList = [
     auth,
     (req, res) => {
@@ -77,6 +81,9 @@ exports.roomTypeList = [
         })
     }
 ];
+/**
+ * Fetch room detail by client
+ */
 exports.roomDetail = [
     (req, res) => {
         RoomTypeService.roomTypeDetail({
@@ -89,6 +96,8 @@ exports.roomDetail = [
         })
     }
 ]
+
+
 exports.roomTypeListByResort = [
     (req, res) => {
         let query = {
@@ -134,11 +143,11 @@ exports.roomTypeUpdate = [
             {
                 name: req.body.name,
                 // resort: req.body?.resort?.split(',') || undefined || undefined,
-                quantity: req.body.quantity,
                 price: req.body.price,
                 maxAdult: req.body.maxAdult,
                 maxChildren: req.body.maxChildren,
-                allowCrypto: req.body.allowCrypto,
+                cryptoRoom: req.body.cryptoRoom,
+                paymentRoom: req.body.paymentRoom,
                 _id: req.params.id,
                 imgs: req.body?.imgs || undefined,
                 description: req.body?.description,
@@ -150,27 +159,22 @@ exports.roomTypeUpdate = [
         }
         RoomType.findById(req.params.id).then(foundRoomType => {
             if (!foundRoomType) return apiResponse.notFoundResponse(res, "Room type not exists with this id");
-
-            //update capacity.
-            const capacity = foundRoomType.capacity
-            const newCapacity = roomType.quantity ? capacity + (roomType.quantity - foundRoomType.quantity) : null
-            if (newCapacity) {
-                roomType.capacity = newCapacity
-            }
-
+            let removeImgs = []
             //update img
-            const imgs = foundRoomType.imgs
-            const newImgs = req.files.map(f => f.path);
-            const removeImgs = req.body.imgsRemoved && req.body.imgsRemoved.split(',') || []
-            const updateImgs = [...imgs, ...newImgs].filter(img => !removeImgs.includes(img))
-            roomType.imgs = updateImgs
+            if (req.files) {
+                const imgs = foundRoomType.imgs
+                const newImgs = req.files.map(f => f.path);
+                removeImgs = req.body.imgsRemoved && req.body.imgsRemoved.split(',') || []
+                const updateImgs = [...imgs, ...newImgs].filter(img => !removeImgs.includes(img))
+                roomType.imgs = updateImgs
+            }
 
             RoomType.findByIdAndUpdate(req.params.id, roomType, {}, function (err) {
                 if (err) {
                     return apiResponse.ErrorResponse(res, err);
                 } else {
                     // clean image
-                    deleteFiles(removeImgs.map(path => './' + path), (err) => {
+                    removeImgs && deleteFiles(removeImgs.map(path => './' + path), (err) => {
                         if (err) return apiResponse.ErrorResponse(res, err);
 
                         let roomTypeData = new RoomTypeData(roomType);

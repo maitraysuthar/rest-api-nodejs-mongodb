@@ -1,4 +1,7 @@
-const moment = require("moment");
+const Moment = require("moment");
+const MomentRange = require("moment-range");
+
+const moment = MomentRange.extendMoment(Moment);
 
 exports.getCheckInTimeToDate = (time) => {
 	return moment(Number(time)).set({ "hour": 15, "minute": 0, "second": 0, "millisecond": 0 }).toDate();
@@ -17,4 +20,6 @@ exports.isAllowCanceled = (reservation) => {
 	const timeCheckIn = moment(reservation.checkIn).subtract(process.env.RESERVATION_LIFE_CANCELED, "day");
 
 	return moment(moment.now()).isBefore(timeCheckIn);
-}; 
+};
+
+exports.moment = moment;

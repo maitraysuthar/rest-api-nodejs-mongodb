@@ -7,6 +7,7 @@ var roomTypeRouter = require("./roomType");
 var uploadRouter = require("./upload");
 var reservationRouter = require("./reservation");
 var paymentRouter = require("./payment");
+var timelineRouter = require("./timeline");
 
 var app = express();
 
@@ -18,5 +19,6 @@ app.use("/roomType/", roomTypeRouter);
 app.use("/upload/", uploadRouter);
 app.use("/reservation/", reservationRouter);
 app.use("/payment/", paymentRouter);
+app.use("/timeline/", timelineRouter);
 
 module.exports = app;

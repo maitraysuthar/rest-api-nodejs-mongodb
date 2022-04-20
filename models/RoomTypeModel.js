@@ -10,9 +10,8 @@ var RoomTypeSchema = new Schema({
 	sale: { type: Number, default: 0 },
 	maxAdult: { type: Number, required: true },
 	maxChildren: { type: Number, required: true },
-	quantity: { type: Number, required: true, default: 1 },
-	allowCrypto: { type: Boolean, default: true },
-	capacity: { type: Number, required: true, default: 1 },
+	cryptoRoom: { type: Number, required: true },
+	paymentRoom: { type: Number, required: true },
 	avatar: { type: String },
 	imgs: [{ type: String }],
 	status: { type: Boolean, default: true }
