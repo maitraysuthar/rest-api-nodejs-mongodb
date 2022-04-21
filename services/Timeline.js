@@ -1,5 +1,7 @@
 const Timeline = require('../models/Timeline')
+const TimelineEvent = require('../models/TimelineEvent')
 const { moment } = require('../helpers/time')
+
 exports.createTimeline = (params, cb) => {
     const timeline = new Timeline(params);
     // Validate timeline
@@ -8,6 +10,25 @@ exports.createTimeline = (params, cb) => {
     }, (err, timelines) => {
         const overlap = _isOverlap(timeline, timelines)
         if (overlap) return cb('Timeline is overlap!')
+
+        timeline.save().then(() => {
+            return cb(null)
+        }).catch(error => {
+            return cb(error?.message)
+        })
+    })
+
+};
+
+exports.createTimelineEvent = (params, cb) => {
+    const timeline = new TimelineEvent(params);
+    // Validate timeline
+    TimelineEvent.findOne({
+        room: params.room,
+        type: params.type
+    }, (err, found) => {
+        if (err) return cb(err)
+        if (found) return cb("Event existed.")
 
         timeline.save().then(() => {
             return cb(null)
@@ -50,6 +71,18 @@ exports.updateTimeline = (id, params, cb) => {
                 return cb(null)
             })
 
+        })
+    })
+}
+
+
+exports.updateTimelineEvent = (id, params, cb) => {
+    TimelineEvent.findById(id, (err, foundTimeline) => {
+        if (err) return cb(err)
+        if (!foundTimeline) return cb('Event not found!')
+        TimelineEvent.findByIdAndUpdate(id, params, (err,data) => {
+            if (err) return cb(err)
+            return cb(null)
         })
     })
 }

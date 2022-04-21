@@ -417,6 +417,29 @@ exports.roomTypeList = (user, cb) => {
 				}
 			]
 		})
+		.lookup({
+			from: "timelineevents",
+			as: "timelineEvents",
+			let: {
+				id: '$_id'
+			},
+			pipeline: [
+				{
+					$match: {
+						$expr: {
+							$and: [
+								{
+									$eq: [
+										'$$id',
+										"$room",
+									]
+								},
+							]
+						}
+					}
+				}
+			]
+		})
 	aggregate.exec((error, docs) => {
 		if (error) return cb(error)
 		docs.forEach(doc => {
