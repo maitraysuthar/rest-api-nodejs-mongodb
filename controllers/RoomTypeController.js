@@ -125,7 +125,9 @@ exports.roomTypeSearch = [
         })
     }
 ]
-
+/**
+ * Get reservation suggestion by filter
+ */
 exports.getRoomTypeSuggestion = [
     (req, res) => {
         RoomTypeService.getRoomTypeSuggestion(req.body, (error, rooms) => {

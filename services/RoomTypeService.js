@@ -19,29 +19,43 @@ const moment = MomentRange.extendMoment(Moment);
  * @param {*} quantity 
  * @returns number of room available
  */
-const _calculateCapacity = (reservations = [], doc) => {
-	const listAvai = []
-	const quantity = doc.quantity
-	reservations.reduce((ret, reservation, index) => {
-		const amount = reservation.rooms.find(r => r.roomId.toString() == doc._id.toString())?.amount || 0
-		if (index == 0) {
-			listAvai.push(quantity - amount)
-			return quantity - amount
-		}
-		const preRange = moment.range(reservations[index - 1].checkIn, reservations[index - 1].checkOut)
-		const range = moment.range(reservation.checkIn, reservation.checkOut)
-		if (preRange.overlaps(range)) {
-			listAvai.push(ret - amount)
-			return ret - amount
-		} else {
-			listAvai.push(ret + reservations[index - 1].amount - amount)
-			return ret + reservations[index - 1].amount - amount
-		}
-	}, quantity)
-	return max([
-		min([...listAvai, quantity]),
-		0
-	])
+const _calculateCapacity = (reservations = [], doc, checkIn, checkOut) => {
+	let start = moment(checkIn).startOf('days')
+	let end = moment(checkOut).endOf('days')
+
+	let timelines = doc.timelines.map(timeline => ({ ...timeline, range: moment.range(timeline.startTime, timeline.endTime) }))
+	reservations = reservations.map(r => ({ ...r, range: moment.range(moment(r.checkIn).startOf('days'), moment(r.checkOut).startOf('days')) }))
+
+	let availables = []
+
+	let basicOccupys = []
+
+	let timelineOccupys = []
+
+	while (start.isBefore(end)) {
+		const timelineFounded = timelines.find(t => t.range.contains(start))
+		const reservationsFounded = reservations.find(r => r.range.contains(start))
+
+		let isSameCheckout = reservationsFounded && moment(start).set({ "hour": 12, "minute": 0, "second": 0, "millisecond": 0 }).isSame(reservationsFounded.checkOut)
+		let roomBooked = reservationsFounded?.rooms?.find(r => r.roomId.toString() == doc._id.toString())
+		let roomOccupy = roomBooked && !isSameCheckout ? roomBooked.amount : 0
+		let available = timelineFounded ? timelineFounded.paymentRoom - roomOccupy : doc.paymentRoom - roomOccupy
+
+		let basicOccupy = timelineFounded ? 0 : roomOccupy
+		basicOccupys.push(basicOccupy)
+
+		let timelineOccupy = timelineFounded ? roomOccupy : 0
+		timelineOccupys.push(timelineOccupy)
+
+		availables.push(available)
+
+		start = start.add(1, 'days')
+	}
+	return {
+		available: min(availables),
+		basicOccupy: max(basicOccupys),
+		timelineOccupy: max(timelineOccupys)
+	}
 }
 
 exports.getRoomTypeSuggestion = (params, cb) => {
@@ -128,7 +142,30 @@ exports.getRoomTypeSuggestion = (params, cb) => {
 					}
 				}
 			]
-		});
+		})
+		.lookup({
+			from: "timelines",
+			as: "timelines",
+			let: {
+				id: '$_id'
+			},
+			pipeline: [
+				{
+					$match: {
+						$expr: {
+							$and: [
+								{
+									$eq: [
+										'$$id',
+										"$room",
+									]
+								},
+							]
+						}
+					}
+				}
+			]
+		})
 
 	aggregate.exec((error, rooms) => {
 		if (error) return cb(error)
@@ -136,7 +173,7 @@ exports.getRoomTypeSuggestion = (params, cb) => {
 		rooms.forEach(doc => {
 			const reservations = doc?.reservations || []
 
-			doc.capacity = _calculateCapacity(reservations, doc)
+			doc.capacity = _calculateCapacity(reservations, doc, checkIn, checkOut).available
 		})
 
 		const combinations = generateCombinations(rooms, amount, amount)
@@ -274,6 +311,28 @@ exports.roomTypeSearch = (params, cb) => {
 					}
 				}
 			]
+		}).lookup({
+			from: "timelines",
+			as: "timelines",
+			let: {
+				id: '$_id'
+			},
+			pipeline: [
+				{
+					$match: {
+						$expr: {
+							$and: [
+								{
+									$eq: [
+										'$$id',
+										"$room",
+									]
+								},
+							]
+						}
+					}
+				}
+			]
 		});
 
 	aggregate.exec((error, docs) => {
@@ -282,7 +341,7 @@ exports.roomTypeSearch = (params, cb) => {
 			docs.forEach(doc => {
 				const reservations = doc?.reservations || []
 
-				doc.capacity = _calculateCapacity(reservations, doc)
+				doc.capacity = _calculateCapacity(reservations, doc, checkIn, checkOut).available
 			})
 		}
 		return cb(error, docs)
@@ -362,6 +421,7 @@ exports.roomTypeList = (user, cb) => {
 		if (error) return cb(error)
 		docs.forEach(doc => {
 			let reservations = doc?.reservations || []
+
 			reservations = reservations.filter((reservation) => {
 				let checkIn = moment(reservation.checkIn)
 				let checkOut = moment(reservation.checkOut)
@@ -371,7 +431,14 @@ exports.roomTypeList = (user, cb) => {
 				}
 			})
 
-			doc.capacity = _calculateCapacity(reservations, doc)
+			let maxCheckOut = moment.max(_.flatten(reservations.map(r => [moment(r.checkIn), moment(r.checkOut)])))
+
+			let { available, basicOccupy, timelineOccupy } = _calculateCapacity(reservations, doc, moment(), maxCheckOut)
+
+			doc.capacity = reservations?.length ? available : 0
+			doc.basicOccupy = reservations?.length ? basicOccupy : 0
+			doc.timelineOccupy = reservations?.length ? timelineOccupy : 0
+
 
 		})
 		return cb(error, docs)
@@ -458,6 +525,28 @@ exports.roomTypeDetail = (params, cb) => {
 					}
 				}
 			]
+		}).lookup({
+			from: "timelines",
+			as: "timelines",
+			let: {
+				id: '$_id'
+			},
+			pipeline: [
+				{
+					$match: {
+						$expr: {
+							$and: [
+								{
+									$eq: [
+										'$$id',
+										"$room",
+									]
+								},
+							]
+						}
+					}
+				}
+			]
 		})
 	aggregate.exec((error, docs) => {
 		if (error) return cb(error)
@@ -465,7 +554,7 @@ exports.roomTypeDetail = (params, cb) => {
 			docs.forEach(doc => {
 				const reservations = doc?.reservations || []
 
-				doc.capacity = _calculateCapacity(reservations, doc)
+				doc.capacity = _calculateCapacity(reservations, doc, checkIn, checkOut).available
 			})
 			return cb(error, docs[0])
 		}

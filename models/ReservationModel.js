@@ -31,7 +31,6 @@ var ReservationSchema = new Schema({
 	rooms: [Room],
 	checkIn: { type: Date, required: true },
 	checkOut: { type: Date, required: true },
-	amount: { type: Number, required: true, default: 1 },
 	totalPrice: { type: Number, required: true },
 	status: { type: Number, enum: Object.values(RESERVATION_STATUS), default: RESERVATION_STATUS.PENDING_PAYMENT },
 	invoice: { type: InvoiceSchame, required: true },
