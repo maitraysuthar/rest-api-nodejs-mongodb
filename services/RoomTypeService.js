@@ -12,7 +12,28 @@ const { RESERVATION_STATUS } = require('../constants/index')
 const { generateCombinations } = require("../helpers/utility");
 
 const moment = MomentRange.extendMoment(Moment);
+/**
+ * 
+ * @param {*} room 
+ * @param {*} reservation 
+ * @returns room had booked in reservation
+ */
+const _getRoomBookedByReservation = (room, reservation) => {
+	return reservation?.rooms?.find(r => r.roomId.toString() == room._id.toString())
+}
+/**
+ * 
+ * @param {*} time 
+ * @param {*} reservation 
+ * @returns true if time same checkout of reservation
+ */
+const _isSameCheckout = (time, reservation) => {
+	return reservation && moment(time).set({ "hour": 12, "minute": 0, "second": 0, "millisecond": 0 }).isSame(reservation.checkOut)
+}
 
+const _getNumberOfRoom = (room, timelineFounded, event) => {
+	return timelineFounded ? timelineFounded.paymentRoom : room.paymentRoom
+}
 /**
  * calculatate number of room available
  * @param {*} reservations 
@@ -34,12 +55,15 @@ const _calculateCapacity = (reservations = [], doc, checkIn, checkOut) => {
 
 	while (start.isBefore(end)) {
 		const timelineFounded = timelines.find(t => t.range.contains(start))
-		const reservationsFounded = reservations.find(r => r.range.contains(start))
+		const reservationsFoundeds = reservations.filter(r => r.range.contains(start))
 
-		let isSameCheckout = reservationsFounded && moment(start).set({ "hour": 12, "minute": 0, "second": 0, "millisecond": 0 }).isSame(reservationsFounded.checkOut)
-		let roomBooked = reservationsFounded?.rooms?.find(r => r.roomId.toString() == doc._id.toString())
-		let roomOccupy = roomBooked && !isSameCheckout ? roomBooked.amount : 0
-		let available = timelineFounded ? timelineFounded.paymentRoom - roomOccupy : doc.paymentRoom - roomOccupy
+		let roomOccupy = reservationsFoundeds.reduce((ret, reservation) => {
+			let isSameCheckout = _isSameCheckout(start, reservation)
+			let _roomBooked = _getRoomBookedByReservation(doc, reservation)?.amount
+			let _roomOccupy = _roomBooked && !isSameCheckout ? _roomBooked : 0
+			return ret + _roomOccupy
+		}, 0)
+		let available = _getNumberOfRoom(doc, timelineFounded) - roomOccupy
 
 		let basicOccupy = timelineFounded ? 0 : roomOccupy
 		basicOccupys.push(basicOccupy)
@@ -165,6 +189,28 @@ exports.getRoomTypeSuggestion = (params, cb) => {
 					}
 				}
 			]
+		}).lookup({
+			from: "timelineevents",
+			as: "timelineEvents",
+			let: {
+				id: '$_id'
+			},
+			pipeline: [
+				{
+					$match: {
+						$expr: {
+							$and: [
+								{
+									$eq: [
+										'$$id',
+										"$room",
+									]
+								},
+							]
+						}
+					}
+				}
+			]
 		})
 
 	aggregate.exec((error, rooms) => {
@@ -182,7 +228,7 @@ exports.getRoomTypeSuggestion = (params, cb) => {
 			const group = _.groupBy(comb, '_id')
 			for (const key in group) {
 				const numberOfRoom = group[key].length
-				if (group[key][0].capacity <= numberOfRoom) {
+				if (group[key][0].capacity < numberOfRoom) {
 					return false
 				}
 			}
@@ -333,7 +379,29 @@ exports.roomTypeSearch = (params, cb) => {
 					}
 				}
 			]
-		});
+		}).lookup({
+			from: "timelineevents",
+			as: "timelineEvents",
+			let: {
+				id: '$_id'
+			},
+			pipeline: [
+				{
+					$match: {
+						$expr: {
+							$and: [
+								{
+									$eq: [
+										'$$id',
+										"$room",
+									]
+								},
+							]
+						}
+					}
+				}
+			]
+		})
 
 	aggregate.exec((error, docs) => {
 		if (error) return cb(error)
@@ -551,6 +619,28 @@ exports.roomTypeDetail = (params, cb) => {
 		}).lookup({
 			from: "timelines",
 			as: "timelines",
+			let: {
+				id: '$_id'
+			},
+			pipeline: [
+				{
+					$match: {
+						$expr: {
+							$and: [
+								{
+									$eq: [
+										'$$id',
+										"$room",
+									]
+								},
+							]
+						}
+					}
+				}
+			]
+		}).lookup({
+			from: "timelineevents",
+			as: "timelineEvents",
 			let: {
 				id: '$_id'
 			},
