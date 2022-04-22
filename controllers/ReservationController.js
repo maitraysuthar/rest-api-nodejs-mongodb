@@ -99,7 +99,7 @@ exports.reservationList = [
 	}
 ];
 /**
- * Set status reservation to COMPLETED
+ * Checkout reservation by admin
  */
 exports.checkout = [
 	auth,

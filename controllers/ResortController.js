@@ -62,7 +62,9 @@ exports.resortList = [
         }
     }
 ]
-
+/**
+ * Create resort
+ */
 exports.resortStore = [
     auth,
     authSuperAdmin,
@@ -98,7 +100,9 @@ exports.resortStore = [
         }
     }
 ]
-
+/**
+ * Lock resort
+ */
 exports.resortDelete = [
     auth,
     authSuperAdmin,
@@ -130,7 +134,9 @@ exports.resortDelete = [
         }
     }
 ]
-
+/**
+ * Update resort
+ */
 exports.resortUpdate = [
     auth,
     authSuperAdmin,

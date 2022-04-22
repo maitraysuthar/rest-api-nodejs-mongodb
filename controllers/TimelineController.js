@@ -6,7 +6,9 @@ const auth = require("../middlewares/jwt");
 const { omitNullishObject } = require("../helpers/utility");
 
 const { TIMELINE_EVENT } = require("../constants/index");
-
+/**
+ * get type of timeline loop
+ */
 exports.getTimelineEvent = [
 	auth,
 	authAdmin,
@@ -15,7 +17,9 @@ exports.getTimelineEvent = [
 	}
 ];
 
-
+/**
+ * create timeline by specific time range
+ */
 exports.createTimeline = [
 	auth,
 	authAdmin,
@@ -27,7 +31,9 @@ exports.createTimeline = [
 		});
 	}
 ];
-
+/**
+ * Create timeline loop
+ */
 exports.createTimelineEvent = [
 	auth,
 	authAdmin,
@@ -39,7 +45,9 @@ exports.createTimelineEvent = [
 		});
 	}
 ];
-
+/**
+ * Update timeline 
+ */
 exports.updateTimeline = [
 	auth,
 	authAdmin,
@@ -52,7 +60,9 @@ exports.updateTimeline = [
 		});
 	}
 ];
-
+/**
+ * update timeline loop
+ */
 exports.updateTimelineEvent = [
 	auth,
 	authAdmin,

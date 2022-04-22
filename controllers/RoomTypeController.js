@@ -98,26 +98,6 @@ exports.roomDetail = [
 ]
 
 
-exports.roomTypeListByResort = [
-    (req, res) => {
-        let query = {
-            resort: {
-                $in: req.params.id
-            },
-            maxAdult: {
-                $gte: req.params.maxAdult
-            }
-        }
-
-        RoomType.find({ ...query, status: true }).populate('resort').then(roomTypes => {
-            if (roomTypes.length > 0) {
-                return apiResponse.successResponseWithData(res, "Operation success", roomTypes);
-            } else {
-                return apiResponse.successResponseWithData(res, "Operation success", []);
-            }
-        })
-    }
-];
 exports.roomTypeSearch = [
     (req, res) => {
         RoomTypeService.roomTypeSearch(req.body, (error, rooms) => {
@@ -135,7 +115,9 @@ exports.getRoomTypeSuggestion = [
         })
     }
 ]
-
+/**
+ * Update roomtype by admin
+ */
 exports.roomTypeUpdate = [
     auth,
     authAdmin,
@@ -187,7 +169,9 @@ exports.roomTypeUpdate = [
         })
     }
 ];
-
+/**
+ * Lock roomtype by admin
+ */
 exports.roomTypeDelete = [
     auth,
     authAdmin,

@@ -5,7 +5,6 @@ var router = express.Router();
 
 router.get("/", RoomTypeController.roomTypeList);
 router.get("/:id", RoomTypeController.roomDetail);
-router.get("/resort/:id", RoomTypeController.roomTypeListByResort);
 router.post("/", RoomTypeController.roomTypeStore);
 router.put("/:id", RoomTypeController.roomTypeUpdate);
 router.delete("/:id", RoomTypeController.roomTypeDelete);

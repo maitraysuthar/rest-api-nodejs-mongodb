@@ -14,7 +14,9 @@ const { generatePassword } = require("../helpers/user");
 const { omitNullishObject } = require('../helpers/utility')
 const mailer = require("../helpers/mailer");
 const { constants } = require("../helpers/constants");
-
+/**
+ * Get list user by super admin
+ */
 exports.userList = [
 	auth,
 	authSuperAdmin,
@@ -28,7 +30,9 @@ exports.userList = [
 		});
 	}
 ];
-
+/**
+ * Create user by super admin
+ */
 exports.userStore = [
 	auth,
 	authSuperAdmin,
@@ -76,7 +80,9 @@ exports.userStore = [
 		})
 	}
 ];
-
+/**
+ * Update user by super admin
+ */
 exports.userUpdate = [
 	auth,
 	authSuperAdmin,
@@ -117,7 +123,9 @@ exports.userUpdate = [
 		});
 	}
 ];
-
+/**
+ * Block user by super admin
+ */
 exports.userDelete = [
 	auth,
 	authSuperAdmin,
