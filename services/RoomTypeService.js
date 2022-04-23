@@ -668,6 +668,7 @@ exports.roomTypeDetail = (params, cb) => {
 				const reservations = doc?.reservations || []
 
 				doc.capacity = _calculateCapacity(reservations, doc, checkIn, checkOut).available
+				doc.timelineOccupy = _calculateCapacity(reservations, doc, checkIn, checkOut).timelineOccupy
 			})
 			return cb(error, docs[0])
 		}

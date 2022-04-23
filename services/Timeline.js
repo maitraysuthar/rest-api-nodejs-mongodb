@@ -1,7 +1,7 @@
 const Timeline = require('../models/Timeline')
 const TimelineEvent = require('../models/TimelineEvent')
 const { moment } = require('../helpers/time')
-
+const RoomTypeService = require('../services/RoomTypeService')
 exports.createTimeline = (params, cb) => {
     const timeline = new Timeline(params);
     // Validate timeline
@@ -62,15 +62,25 @@ exports.updateTimeline = (id, params, cb) => {
             room: foundTimeline.room
         }, (err, timelines) => {
             if (err) return cb(err)
-            const overlap = _isOverlap(timeLine, timelines.filter(t => t._id.toString() !== foundTimeline._id.toString()))
-            if (overlap) return cb('Timeline is overlap!')
+            RoomTypeService.roomTypeDetail({
+                roomtype: foundTimeline.room,
+                checkIn: timeLine.startTime,
+                checkOut: timeLine.endTime
+            }, (error, room) => {
+                console.info('error,room', error, room)
+                // validate payment room
+                if (params.paymentRoom < room.timelineOccupy) {
+                    return cb('Invalid payment room. Payment room must be greater or equal ' + room.timelineOccupy)
+                }
+                const overlap = _isOverlap(timeLine, timelines.filter(t => t._id.toString() !== foundTimeline._id.toString()))
+                if (overlap) return cb('Timeline is overlap!')
 
-            //Update timeline
-            Timeline.findByIdAndUpdate(id, params, (err) => {
-                if (err) return cb(err)
-                return cb(null)
+                //Update timeline
+                Timeline.findByIdAndUpdate(id, params, (err) => {
+                    if (err) return cb(err)
+                    return cb(null)
+                })
             })
-
         })
     })
 }
@@ -80,7 +90,7 @@ exports.updateTimelineEvent = (id, params, cb) => {
     TimelineEvent.findById(id, (err, foundTimeline) => {
         if (err) return cb(err)
         if (!foundTimeline) return cb('Event not found!')
-        TimelineEvent.findByIdAndUpdate(id, params, (err,data) => {
+        TimelineEvent.findByIdAndUpdate(id, params, (err, data) => {
             if (err) return cb(err)
             return cb(null)
         })
