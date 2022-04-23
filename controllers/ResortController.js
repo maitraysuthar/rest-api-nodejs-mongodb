@@ -4,7 +4,8 @@ const { validationResult } = require("express-validator");
 const apiResponse = require("../helpers/apiResponse");
 const auth = require("../middlewares/jwt");
 const { authSuperAdmin } = require("../middlewares/role");
-const { omitNullishObject } = require("../helpers/utility");
+const { omitNullishObject, deleteFiles } = require("../helpers/utility");
+const { upload } = require('../controllers/UploadController');
 
 // Book Schema
 function ResortData(data) {
@@ -18,12 +19,12 @@ function ResortData(data) {
  * 
  * @returns {Object}
  */
- exports.resortAll = [
+exports.resortAll = [
     function (req, res) {
         try {
             Resort.find({
-                status:{
-                    $ne:0
+                status: {
+                    $ne: 0
                 }
             }).then((resorts) => {
                 if (resorts.length > 0) {
@@ -68,6 +69,7 @@ exports.resortList = [
 exports.resortStore = [
     auth,
     authSuperAdmin,
+    upload.array("files", 10),
     function (req, res) {
         try {
             const errors = validationResult(req);
@@ -83,6 +85,7 @@ exports.resortStore = [
                         description: req.body.description,
                         phone: req.body.phone,
                         rate: req.body.rate,
+                        imgs: req?.files?.map(f => f.path),
                         status: req.body.status,
                     }
                 )
@@ -140,6 +143,7 @@ exports.resortDelete = [
 exports.resortUpdate = [
     auth,
     authSuperAdmin,
+    upload.array("files", 10),
     function (req, res) {
         try {
             const resort = new Resort({
@@ -165,11 +169,26 @@ exports.resortUpdate = [
                     return apiResponse.notFoundResponse(res, "Resort not exists with this id");
                 }
 
+                let removeImgs = []
+                //update img
+                if (req.files) {
+                    const imgs = foundResort.imgs
+                    const newImgs = req.files.map(f => f.path);
+                    removeImgs = req.body.imgsRemoved && req.body.imgsRemoved.split(',') || []
+                    const updateImgs = [...imgs, ...newImgs].filter(img => !removeImgs.includes(img))
+                    resort.imgs = updateImgs
+                }
+
                 Resort.findByIdAndUpdate(req.params.id, resort, {}, (error) => {
-                    if (error) {
-                        return apiResponse.ErrorResponse(res, error);
+                    if (err) {
+                        return apiResponse.ErrorResponse(res, err);
+                    } else {
+                        // clean image
+                        removeImgs && deleteFiles(removeImgs.map(path => './' + path), (err) => {
+                            if (err) return apiResponse.ErrorResponse(res, err);
+                            return apiResponse.successResponse(res, "Resort update Success.");
+                        })
                     }
-                    return apiResponse.successResponseWithData(res, "Resort update Success.");
                 })
             })
         } catch (err) {

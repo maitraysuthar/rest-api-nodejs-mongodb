@@ -9,7 +9,8 @@ var ResortSchema = new Schema({
 	phone: { type: String, required: true },
 	city: { type: Number, default: 0 },
 	rate: { type: Number },
-	status: { type: Number, default: 1 }
+	status: { type: Number, default: 1 },
+	imgs: [{ type: String }],
 }, { timestamps: true });
 
 module.exports = mongoose.model("Resort", ResortSchema);
