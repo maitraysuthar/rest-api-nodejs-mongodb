@@ -10,6 +10,7 @@ var Timeline = new Schema({
     endTime: { type: Date, required: true },
     cryptoRoom: { type: Number, required: true },
     paymentRoom: { type: Number, required: true },
+    color: { type: String, default: "#F17013" }
 }, { timestamps: true });
 
 module.exports = mongoose.model("Timeline", Timeline);
