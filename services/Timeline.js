@@ -8,13 +8,25 @@ exports.createTimeline = (params, cb) => {
     Timeline.find({
         room: params.room
     }, (err, timelines) => {
-        const overlap = _isOverlap(timeline, timelines)
-        if (overlap) return cb('Timeline is overlap!')
 
-        timeline.save().then(() => {
-            return cb(null)
-        }).catch(error => {
-            return cb(error?.message)
+        RoomTypeService.roomTypeDetail({
+            roomtype: params.room,
+            checkIn: timeline.startTime,
+            checkOut: timeline.endTime
+        }, (error, room) => {
+            // validate payment room
+            if (params.paymentRoom < room.basicOccupy) {
+                return cb('Invalid payment room. Payment room must be greater or equal ' + room.basicOccupy)
+            }
+
+            const overlap = _isOverlap(timeline, timelines)
+            if (overlap) return cb('Timeline is overlap!')
+
+            timeline.save().then(() => {
+                return cb(null)
+            }).catch(error => {
+                return cb(error?.message)
+            })
         })
     })
 
