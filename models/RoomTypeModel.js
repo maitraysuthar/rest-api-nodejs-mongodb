@@ -14,7 +14,8 @@ var RoomTypeSchema = new Schema({
 	paymentRoom: { type: Number, required: true },
 	avatar: { type: String },
 	imgs: [{ type: String }],
-	status: { type: Boolean, default: true }
+	status: { type: Boolean, default: true },
+	utils: [Schema.Types.Mixed]
 
 }, { timestamps: true });
 

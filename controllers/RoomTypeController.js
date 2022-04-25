@@ -35,7 +35,8 @@ exports.roomTypeStore = [
             paymentRoom: req.body.paymentRoom,
             imgs: req?.files?.map(f => f.path),
             description: req.body?.description,
-            sale: Number(req.body?.sale) || undefined
+            sale: Number(req.body?.sale) || undefined,
+            utils: req.body.utils ? JSON.parse(req.body.utils) : []
         })))
 
         const taskVerifyExistRoom = rooms.map(room => {
@@ -135,9 +136,11 @@ exports.roomTypeUpdate = [
                 _id: req.params.id,
                 imgs: req.body?.imgs || undefined,
                 description: req.body?.description,
-                sale: Number(req?.body?.sale) ?? undefined
+                sale: Number(req?.body?.sale) ?? undefined,
+                utils: req.body.utils ? JSON.parse(req.body.utils) : []
             }
         )
+
         if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
             return apiResponse.validationErrorWithData(res, "Invalid Error.", "Invalid ID");
         }
