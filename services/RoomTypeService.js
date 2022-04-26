@@ -8,7 +8,7 @@ const MomentRange = require("moment-range");
 
 
 const { getCheckInTimeToDate, getCheckOutTimeToDate } = require("../helpers/time");
-const { RESERVATION_STATUS } = require('../constants/index')
+const { RESERVATION_STATUS, TIMELINE_EVENT } = require('../constants/index')
 const { generateCombinations } = require("../helpers/utility");
 
 const moment = MomentRange.extendMoment(Moment);
@@ -32,7 +32,13 @@ const _isSameCheckout = (time, reservation) => {
 }
 
 const _getNumberOfRoom = (room, timelineFounded, event) => {
-	return timelineFounded ? timelineFounded.paymentRoom : room.paymentRoom
+	if (timelineFounded) {
+		return timelineFounded.paymentRoom
+	}
+	if (event) {
+		return event.paymentRoom
+	}
+	return room.paymentRoom
 }
 /**
  * calculatate number of room available
@@ -47,6 +53,8 @@ const _calculateCapacity = (reservations = [], doc, checkIn, checkOut) => {
 	let timelines = doc.timelines.map(timeline => ({ ...timeline, range: moment.range(timeline.startTime, timeline.endTime) }))
 	reservations = reservations.map(r => ({ ...r, range: moment.range(moment(r.checkIn).startOf('days'), moment(r.checkOut).startOf('days')) }))
 
+	let timelineEvents = doc.timelineEvents || []
+
 	let availables = []
 
 	let basicOccupys = []
@@ -57,13 +65,17 @@ const _calculateCapacity = (reservations = [], doc, checkIn, checkOut) => {
 		const timelineFounded = timelines.find(t => t.range.contains(start))
 		const reservationsFoundeds = reservations.filter(r => r.range.contains(start))
 
+		const event = timelineEvents.find((event) => {
+			return typeof TIMELINE_EVENT[event.type].match == 'function' ? TIMELINE_EVENT[event.type].match(moment(start, "DD/MM/YYYY")) : false
+		})
+
 		let roomOccupy = reservationsFoundeds.reduce((ret, reservation) => {
 			let isSameCheckout = _isSameCheckout(start, reservation)
 			let _roomBooked = _getRoomBookedByReservation(doc, reservation)?.amount
 			let _roomOccupy = _roomBooked && !isSameCheckout ? _roomBooked : 0
 			return ret + _roomOccupy
 		}, 0)
-		let available = _getNumberOfRoom(doc, timelineFounded) - roomOccupy
+		let available = _getNumberOfRoom(doc, timelineFounded, event) - roomOccupy
 
 		let basicOccupy = timelineFounded ? 0 : roomOccupy
 		basicOccupys.push(basicOccupy)

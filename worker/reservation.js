@@ -34,7 +34,7 @@ cron.schedule(
  * Job checkout
  */
 cron.schedule(
-    "0 0 16 * * *",
+    "0 0 12 * * *",
     () => {
         const now = moment().toDate();
         Reservation.updateMany({
