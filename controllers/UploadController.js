@@ -1,9 +1,5 @@
-const { authAdmin } = require("../middlewares/role");
 const multer = require("multer");
-const fs = require("fs");
 
-const apiResponse = require("../helpers/apiResponse");
-const auth = require("../middlewares/jwt");
 
 const MIME_TYPE_MAP = {
 	"image/png": "png",
@@ -31,41 +27,6 @@ const upload = multer({
 	}
 });
 
-const create = [
-	auth,
-	authAdmin,
-	upload.array("files", 5),
-	(req, res) => {
-		return apiResponse.successResponseWithData(res, "File update Success.", req.files);
-	}
-];
-
-const update = [
-	authAdmin,
-	(req, res) => {
-
-	}
-];
-
-const remove = [
-	auth,
-	authAdmin,
-	(req, res) => {
-		// "path": "public/uploads/1647312581810-866337763.jpeg",
-		const path = "./" + req.query.path;
-		fs.unlink(path, (err) => {
-			if (err) {
-				return apiResponse.successResponseWithData(res, "File remove not exist.");
-			} else {
-				return apiResponse.successResponseWithData(res, "File remove Success.", { path });
-			}
-		});
-	}
-];
-
 module.exports = {
-	create,
-	update,
-	remove,
 	upload
 };
