@@ -6,12 +6,12 @@ const { RESERVATION_STATUS } = require("../constants/index");
 const { max } = require('lodash')
 
 /**
- * Validate room before create reservation
+ * Validate room of reservation has valid?
  * @param {*} roomtype ObjectID
  * @param {*} reservation 
  * @returns 
  */
-const isRoomValid = (roomtype, reservation) => {
+const isRoomValid = (roomtype, reservation, amount) => {
 	return new Promise((resolve, reject) => {
 		RoomTypeService.roomTypeDetail({
 			roomtype: roomtype,
@@ -20,15 +20,6 @@ const isRoomValid = (roomtype, reservation) => {
 		}, (error, room) => {
 			if (error) return reject(error);
 
-			// Validate checkin checkout
-			if (moment(reservation.checkIn).isBefore(moment.now(), 'day')) {
-				return reject(`The checkIn must be greater than or equal now`);
-			}
-
-			if (moment(reservation.checkIn).isSame(reservation.checkOut, 'day') || moment(reservation.checkIn).isAfter(reservation.checkOut, 'day')) {
-				return reject(`The checkIn must be greater checkOut`);
-			}
-
 			// Validate resort have blocked
 			if (!room?.resort?.status) {
 				return reject(`The resort ${room?.resort?.name} had blocked`);
@@ -36,7 +27,7 @@ const isRoomValid = (roomtype, reservation) => {
 
 			// Validate amount
 			const capacity = room.capacity
-			if (reservation.amount > capacity) {
+			if (amount > capacity) {
 				return reject("Room amount invalid");
 			}
 			return resolve();
@@ -44,6 +35,17 @@ const isRoomValid = (roomtype, reservation) => {
 	})
 }
 exports.isRoomValid = isRoomValid;
+/**
+ * Validate reservation has valid
+ * @param {*} reservation 
+ * @returns 
+ */
+exports.isReservationValid = (reservation) => {
+	// Verify amount per room
+	return Promise.all(reservation.rooms.map(r => {
+		return isRoomValid(r.roomId, reservation, r.amount)
+	}))
+}
 
 /**
  * 
@@ -53,15 +55,15 @@ exports.isRoomValid = isRoomValid;
 exports.create = (reservation, cb) => {
 	// Check valid rooms
 	Promise.all(reservation.rooms.map(r => {
-		return isRoomValid(r.roomId, reservation)
+		return isRoomValid(r.roomId, reservation, r.amount)
 	})).then(() => {
 		reservation.save().then(() => {
 			return cb(null, 'Reservation created')
 		}, (err) => {
-			return cb(err?.message)
+			return cb(err)
 		});
 	}).catch(error => {
-		cb(error?.message)
+		cb(error)
 	})
 
 };
@@ -79,7 +81,7 @@ exports.changeStatus = (req, cb) => {
 			return cb(null)
 		}
 		const callbackFail = (error) => {
-			return cb(error?.message)
+			return cb(error)
 		}
 
 		if (foundReservation.status == RESERVATION_STATUS.PENDING_COMPLETED) {
@@ -106,4 +108,27 @@ exports.changeStatus = (req, cb) => {
 			}).then(callbackSuccess, callbackFail)
 		}
 	})
+}
+/**
+ * 
+ * @param {*} orderId 
+ * @param {*} update 
+ */
+exports.update = async (orderId, update) => {
+	try {
+		let reservation = await Reservation.findOne({ orderId: orderId })
+
+		if (!reservation) {
+			return Promise.reject(new Error(`Order id: ${orderId} not exist.`));
+		}
+
+		await Reservation.findOneAndUpdate(
+			{
+				orderId: orderId
+			},
+			update
+		)
+	} catch (error) {
+		return Promise.reject(error)
+	}
 }

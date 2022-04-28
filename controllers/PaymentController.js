@@ -11,7 +11,7 @@ exports.getUrl = [
 
 exports.vnpReturn = [
 	(req, res) => {
-		PaymentService.updatePayment(req, (error) => {
+		PaymentService.paymentReturn(req.body, (error) => {
 			if (error) return apiResponse.ErrorResponse(res, error);
 			return apiResponse.successResponse(res, "Payment update successful.");
 		});
@@ -19,7 +19,7 @@ exports.vnpReturn = [
 ];
 exports.vnpIpn = [
 	(req, res) => {
-		PaymentService.updatePayment(req, (error) => {
+		PaymentService.paymentReturn(req.body, (error) => {
 			if (error) return apiResponse.ErrorResponse(res, error);
 			return apiResponse.successResponse(res, "Payment update successful.");
 		});

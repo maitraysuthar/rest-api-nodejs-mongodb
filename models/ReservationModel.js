@@ -12,14 +12,18 @@ var InvoiceSchame = mongoose.Schema({
 	message: { type: String }
 });
 var History = mongoose.Schema({
-	rejectedTime: { type: Date },
-	refundedTime: { type: Date },
-	completedTime: { type: Date },
-	canceledTime: { type: Date },
-	penddingCanceledTime: { type: Date },
-	penddingCompletedTime: { type: Date },
-	pendingRefundedTime: { type: Date },
-	pendingPayment: { type: Date }
+	rejectedTime: { type: Schema.Types.Mixed },
+	refundedTime: { type: Schema.Types.Mixed },
+	completedTime: { type: Schema.Types.Mixed },
+	canceledTime: { type: Schema.Types.Mixed },
+	penddingCanceledTime: { type: Schema.Types.Mixed },
+	penddingCompletedTime: { type: Schema.Types.Mixed },
+	pendingRefundedTime: { type: Schema.Types.Mixed },
+	pendingPayment: { type: Schema.Types.Mixed }
+});
+
+var Note = mongoose.Schema({
+	message: { type: String }
 });
 
 var Room = mongoose.Schema({
@@ -35,42 +39,68 @@ var ReservationSchema = new Schema({
 	status: { type: Number, enum: Object.values(RESERVATION_STATUS), default: RESERVATION_STATUS.PENDING_PAYMENT },
 	invoice: { type: InvoiceSchame, required: true },
 	orderId: { type: String, required: true, unique: true },
-	history: { type: History, default: {} }
+	history: { type: History, default: {} },
+	note: Note
 }, { timestamps: true });
 
 ReservationSchema.pre("save", function (next) {
 	this.history = {
-		pendingPayment: moment(moment.now()).toDate()
+		pendingPayment: {
+			time: moment(moment.now()).toDate(),
+			reason: ""
+		}
 	};
 	return next();
 });
 
 ReservationSchema.pre("findOneAndUpdate", async function (next) {
 	const status = this.getUpdate().status;
+	const reason = this.getUpdate().reason || "";
 	const now = moment(moment.now()).toDate();
 
 	if (status == null) return next();
 
 	if (status == RESERVATION_STATUS.REJECTED) {
-		this.set("history.rejectedTime", now);
+		this.set("history.rejectedTime", {
+			time: now,
+			reason
+		});
 	}
 	if (status == RESERVATION_STATUS.REFUNDED) {
-		this.set("history.refundedTime", now);
+		this.set("history.refundedTime", {
+			time: now,
+			reason
+		});
 	}
 	if (status == RESERVATION_STATUS.COMPLETED) {
-		this.set("history.completedTime", now);
+		this.set("history.completedTime", {
+			time: now,
+			reason
+		});
 	}
 	if (status == RESERVATION_STATUS.CANCELED) {
-		this.set("history.canceledTime", now);
+		this.set("history.canceledTime", {
+			time: now,
+			reason
+		});
 	}
 	if (status == RESERVATION_STATUS.PENDING_CANCELED) {
-		this.set("history.penddingCanceledTime", now);
+		this.set("history.penddingCanceledTime", {
+			time: now,
+			reason
+		});
 	}
 	if (status == RESERVATION_STATUS.PENDING_REFUNDED) {
-		this.set("history.pendingRefundedTime", now);
+		this.set("history.pendingRefundedTime", {
+			time: now,
+			reason
+		});
 	}
 	if (status == RESERVATION_STATUS.PENDING_COMPLETED) {
-		this.set("history.penddingCompletedTime", now);
+		this.set("history.penddingCompletedTime", {
+			time: now,
+			reason
+		});
 	}
 
 	return next();

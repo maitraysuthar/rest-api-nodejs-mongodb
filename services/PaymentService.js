@@ -99,8 +99,8 @@ const _updatePaymentStatus = (orderId, status, cb) => {
 	})
 }
 
-exports.updatePayment = (req, cb) => {
-	var vnp_Params = req.body;
+exports.paymentReturn = (body, cb) => {
+	var vnp_Params = body;
 
 	var secureHash = vnp_Params["vnp_SecureHash"];
 
@@ -110,75 +110,61 @@ exports.updatePayment = (req, cb) => {
 	vnp_Params = sortObject(vnp_Params);
 
 	var secretKey = process.env.VNP_HASHSECRET;
-
+	// Sign
 	var signData = querystring.stringify(vnp_Params, { encode: false });
 	var hmac = crypto.createHmac("sha512", secretKey);
 	var signed = hmac.update(new Buffer(signData, "utf-8")).digest("hex");
+	let orderId = vnp_Params["vnp_TxnRef"]
 
-	if (secureHash === signed) {
-		// Verify payment status code
-		if (vnp_Params["vnp_ResponseCode"] !== "00") {
-			// Payment fail then update status reservation to rejected
-			return _updatePaymentStatus(vnp_Params["vnp_TxnRef"], RESERVATION_STATUS.REJECTED, (error) => {
-				if (error) return cb(error);
-				return cb(getMessage(vnp_Params["vnp_ResponseCode"]));
-			})
-		}
-
-		// Update status reservation
-		Reservation.findOne({
-			orderId: vnp_Params["vnp_TxnRef"]
-		}).then(reservation => {
-			if (!reservation) {
-				return cb(`Order id: ${vnp_Params["vnp_TxnRef"]} not exist.`);
-			}
-			// Verify amount per room
-			Promise.all(reservation.rooms.map(r => {
-				return new Promise((resolve, reject) => {
-					RoomTypeService.roomTypeDetail({
-						roomtype: r.roomId,
-						checkIn: reservation.checkIn,
-						checkOut: reservation.checkOut
-					}, (err, room) => {
-						if (err) return reject(err?.message)
-
-						if (r.amount > room.capacity) {
-							return reject('Room occupy')
-						}
-						return resolve()
-					})
-				})
-			})).then(() => {
-				// Update reservation to booked
-				return _updatePaymentStatus(vnp_Params["vnp_TxnRef"], RESERVATION_STATUS.PENDING_COMPLETED, (error) => {
-					if (error) return cb(error);
-					const html = nunjucks.render(
-						path.resolve("template", "payement_success.html"),
-						{
-							full_name: reservation?.invoice?.fullname,
-							phone: reservation?.invoice?.phone,
-							email: reservation?.invoice?.email,
-							order_id: vnp_Params["vnp_TxnRef"],
-							checkIn: `Check in sau 3 giờ ${moment(reservation.checkIn).format('DD-MM-YYY')}`,
-							checkOut: `Check out trước 12 giờ ${moment(reservation.checkOut).format('DD-MM-YYY')}`,
-							totalPrice: `${reservation.totalPrice} VNĐ`
-						}
-					);
-					mailer.send(constants.confirmEmails.from, reservation?.invoice?.email, "Booking sucessfull", html);
-
-					return cb(null, "Payment success.", reservation);
-				})
-			}).catch(() => {
-				// Update reservation to refund
-				return _updatePaymentStatus(vnp_Params["vnp_TxnRef"], RESERVATION_STATUS.PENDING_REFUNDED, (error) => {
-					if (error) return cb(error);
-					return cb(`Your room occupy. We will refund your money. Please choose other room.`);
-				})
-			})
-		});
-	} else {
-		cb("Checksum fail.");
+	if (secureHash !== signed) return cb("Chữ ký không hợp lệ.");
+	// Verify payment status code
+	if (vnp_Params["vnp_ResponseCode"] !== "00") {
+		// Payment fail then update status reservation to rejected
+		return _updatePaymentStatus(orderId, RESERVATION_STATUS.REJECTED, (error) => {
+			if (error) return cb(error);
+			return cb(getMessage(vnp_Params["vnp_ResponseCode"]));
+		})
 	}
+	// Update status reservation
+	Reservation.findOne({
+		orderId
+	}).then(reservation => {
+		if (!reservation) return cb(`Order id: ${orderId} not exist.`);
+
+		ReservationService.isReservationValid(reservation).then(() => {
+			return ReservationService.update(orderId, {
+				status: RESERVATION_STATUS.PENDING_COMPLETED
+			}).then(() => {
+				const html = nunjucks.render(
+					path.resolve("template", "payement_success.html"),
+					{
+						full_name: reservation?.invoice?.fullname,
+						phone: reservation?.invoice?.phone,
+						email: reservation?.invoice?.email,
+						order_id: orderId,
+						checkIn: `Check in sau ${process.env.CHECKIN} giờ ${moment(reservation.checkIn).format('DD-MM-YYY')}`,
+						checkOut: `Check out trước ${process.env.CHECKOUT} giờ ${moment(reservation.checkOut).format('DD-MM-YYY')}`,
+						totalPrice: `${reservation.totalPrice} VNĐ`
+					}
+				);
+				mailer.send(constants.confirmEmails.from, reservation?.invoice?.email, "Booking sucessfull.", html);
+
+				return cb(null, "Booking sucessfull.", reservation);
+			}, (error) => {
+				if (error) return cb(error);
+			})
+		}).catch(() => {
+			// Refund and Update status reservation to refunded
+			return ReservationService.update(orderId, {
+				status: RESERVATION_STATUS.REFUNDED,
+				reason: 'Your room occupy. We will refund your money. Please choose other room.'
+			}).then(() => {
+				return cb(`Your room occupy. We will refund your money. Please choose other room.`);
+			}, (error) => {
+				return cb(error);
+			})
+		})
+	});
 };
 
 exports.cancelPayment = (req, cb) => {
