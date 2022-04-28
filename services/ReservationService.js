@@ -1,4 +1,3 @@
-const moment = require("moment");
 const RoomTypeService = require("../services/RoomTypeService");
 const Reservation = require("../models/ReservationModel");
 const { RESERVATION_STATUS } = require("../constants/index");

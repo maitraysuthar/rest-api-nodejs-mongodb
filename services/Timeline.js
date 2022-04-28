@@ -2,6 +2,7 @@ const Timeline = require('../models/Timeline')
 const TimelineEvent = require('../models/TimelineEvent')
 const { moment } = require('../helpers/time')
 const RoomTypeService = require('../services/RoomTypeService')
+
 exports.createTimeline = (params, cb) => {
     const timeline = new Timeline(params);
     // Validate timeline

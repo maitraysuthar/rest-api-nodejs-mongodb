@@ -1,8 +1,6 @@
 const moment = require("moment");
-const querystring = require("qs");
 const crypto = require("crypto");
 const axios = require('axios')
-const fs = require("fs");
 const path = require("path");
 const nunjucks = require("nunjucks");
 const { customAlphabet } = require('nanoid')
@@ -12,10 +10,7 @@ const { constants } = require("../helpers/constants");
 const { getMessage } = require("../helpers/momo");
 const Reservation = require("../models/ReservationModel");
 const { RESERVATION_STATUS } = require("../constants/index");
-const RoomTypeService = require('../services/RoomTypeService');
 const ReservationService = require('../services/ReservationService')
-const { isAllowCanceled } = require("../helpers/time");
-const nanoIdAlphabet = customAlphabet('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz', 6)
 
 exports.getUrl = async (body) => {
 	try {
@@ -65,34 +60,6 @@ exports.getUrl = async (body) => {
 		return Promise.reject(error?.message || error)
 	}
 };
-/**
- * Check order had exist
- * @param {*} orderId 
- * @param {*} status 
- * @param {*} cb 
- */
-const _updatePaymentStatus = (orderId, status, cb) => {
-	Reservation.findOne({
-		orderId: orderId
-	}).then(reservation => {
-		if (!reservation) {
-			return cb(`Order id: ${orderId} not exist.`);
-		}
-
-		Reservation.findOneAndUpdate(
-			{
-				orderId: orderId
-			},
-			{
-				status: status
-			}
-		).then(() => {
-			return cb(null);
-		}, (error) => {
-			return cb(error?.message);
-		})
-	})
-}
 
 exports.ipn = async (body, cb) => {
 	var params = body;
@@ -159,42 +126,6 @@ exports.ipn = async (body, cb) => {
 	})
 };
 
-exports.cancelPayment = (req, cb) => {
-	let params = req.query;
-
-	let secureHash = params["secureHash"];
-
-	delete params["secureHash"];
-
-
-	let secretKey = process.env.VNP_HASHSECRET;
-
-	let signData = querystring.stringify(params, { encode: false });
-	let hmac = crypto.createHmac("sha512", secretKey);
-	let signed = hmac.update(new Buffer(signData, "utf-8")).digest("hex");
-
-	if (secureHash === signed) {
-		Reservation.findOne({
-			_id: params['id']
-		}).then((reservation) => {
-			if (!reservation) return cb(`Order ${params["orderId"]} not exist.`)
-			if (reservation.status === RESERVATION_STATUS.CANCELED) {
-				return cb(`Your request is in progress.`)
-			}
-			const allowCancel = isAllowCanceled(reservation)
-			if (!allowCancel) return cb(`Your request is expired (before checkin day at least ${process.env.RESERVATION_LIFE_CANCELED} days)`)
-
-			_updatePaymentStatus(reservation["orderId"], RESERVATION_STATUS.CANCELED, (error) => {
-				if (error) return cb(error)
-				return cb(null, 'Reservation pendding canceled.')
-			})
-		}, (error) => {
-			return cb(error?.message)
-		})
-	} else {
-		return cb('Checksum fail.')
-	}
-}
 /**
  * 
  * @param {*} reservation 
