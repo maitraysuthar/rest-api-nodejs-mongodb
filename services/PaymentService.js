@@ -195,23 +195,43 @@ exports.cancelPayment = (req, cb) => {
 		return cb('Checksum fail.')
 	}
 }
+/**
+ * 
+ * @param {*} reservation 
+ * @param {*} amount refund amount
+ */
+exports.refund = async (reservation, amount) => {
 
-exports.refund = (req, cb) => {
-	ReservationService.changeStatus(req, cb)
-}
+	var accessKey = process.env.MOMO_ACCESS_KEY;
+	var secretkey = process.env.MOMO_SECRET_KEY;
+	var partnerCode = process.env.MOMO_PARTNER_CODE;
 
-function sortObject(obj) {
-	let sorted = {};
-	let str = [];
-	let key;
-	for (key in obj) {
-		if (obj.hasOwnProperty(key)) {
-			str.push(encodeURIComponent(key));
+	let orderId = new Date().getTime()
+	const transId = reservation.invoice.transId;
+	const rawSignature = `accessKey=${accessKey}&amount=${amount}&description=${''}&orderId=${orderId}&partnerCode=${partnerCode}&requestId=${orderId}&transId=${transId}`
+
+	var signature = crypto.createHmac("sha256", secretkey)
+		.update(rawSignature)
+		.digest("hex");
+
+	const requestBody = {
+		partnerCode,
+		orderId: orderId,
+		requestId: orderId,
+		amount,
+		transId,
+		lang: "vi",
+		description: '',
+		signature: signature
+	}
+	try {
+		const res = await axios.post(process.env.MOMO_REFUND_URL, requestBody)
+		return res.data
+	} catch (error) {
+		let data = error?.response?.data
+		if (data && data.resultCode == 11) {
+			return Promise.resolve(data)
 		}
+		return Promise.reject(error)
 	}
-	str.sort();
-	for (key = 0; key < str.length; key++) {
-		sorted[str[key]] = encodeURIComponent(obj[str[key]]).replace(/%20/g, "+");
-	}
-	return sorted;
 }

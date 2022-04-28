@@ -101,3 +101,16 @@ exports.checkout = [
 		});
 	}
 ];
+
+exports.cancel = [
+	auth,
+	authAdmin,
+	async (req, res) => {
+		try {
+			await ReservationService.cancel(req.body);
+			return apiResponse.successResponse(res, "Operation success");
+		} catch (error) {
+			return apiResponse.ErrorResponse(res, error.message || error);
+		}
+	}
+];

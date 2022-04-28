@@ -2,8 +2,8 @@ const moment = require("moment");
 const RoomTypeService = require("../services/RoomTypeService");
 const Reservation = require("../models/ReservationModel");
 const { RESERVATION_STATUS } = require("../constants/index");
-
-const { max } = require('lodash')
+const { sign } = require('../helpers/crypto')
+const PaymentService = require('./PaymentService')
 
 /**
  * Validate room of reservation has valid?
@@ -119,7 +119,7 @@ exports.changeStatus = (req, cb) => {
  * @param {*} orderId 
  * @param {*} update 
  */
-exports.update = async (orderId, update) => {
+const update = async (orderId, update) => {
 	try {
 		let reservation = await Reservation.findOne({ orderId: orderId })
 
@@ -137,6 +137,7 @@ exports.update = async (orderId, update) => {
 		return Promise.reject(error)
 	}
 }
+exports.update = update
 
 const _isValidOrderId = async (orderId) => {
 	let reservation = await Reservation.findOne({
@@ -156,4 +157,33 @@ exports.createOrderId = async () => {
 		}
 	}
 	return orderId
+}
+/**
+ * Refund and cancel reservation
+ * @param {*} body {reservationId,amount,secureHash}
+ */
+exports.cancel = async (body) => {
+	let secureHash = body.secureHash
+	delete body['secureHash']
+	const signed = sign(body)
+
+	if (secureHash != signed) return Promise.reject("Chữ ký không hợp lệ.")
+
+	let reservation = await Reservation.findById(body.reservationId)
+
+	if (!reservation) return Promise.reject("Không tìm thấy reservation.")
+
+	let refundAmount = body.amount
+	if (reservation.totalPrice < refundAmount) return Promise.reject("Invalid amount.")
+
+	try {
+		const res = await PaymentService.refund(reservation, refundAmount)
+		await update(reservation.orderId, {
+			status: RESERVATION_STATUS.REFUNDED,
+			reason: "Admin thực hiện refund và hủy."
+		})
+	} catch (error) {
+		return Promise.reject(error)
+	}
+
 }
