@@ -9,7 +9,7 @@ const { customAlphabet } = require('nanoid')
 
 const mailer = require("../helpers/mailer");
 const { constants } = require("../helpers/constants");
-const { getMessage } = require("../helpers/vnpay");
+const { getMessage } = require("../helpers/momo");
 const Reservation = require("../models/ReservationModel");
 const { RESERVATION_STATUS } = require("../constants/index");
 const RoomTypeService = require('../services/RoomTypeService');
@@ -94,72 +94,69 @@ const _updatePaymentStatus = (orderId, status, cb) => {
 	})
 }
 
-exports.paymentReturn = (body, cb) => {
-	let vnp_Params = body;
+exports.ipn = async (body, cb) => {
+	var params = body;
+	var secureHash = params.signature;
+	var accessKey = process.env.MOMO_ACCESS_KEY;
+	var secretkey = process.env.MOMO_SECRET_KEY;
+	var orderId = params.orderId
+	var resultCode = params.resultCode
+	var transId = params.transId
+	delete params['signature']
 
-	let secureHash = vnp_Params["vnp_SecureHash"];
+	var rawSignature = `accessKey=${accessKey}&amount=${params.amount}&extraData=${params.extraData}&message=${params.message}&orderId=${params.orderId}&orderInfo=${params.orderInfo}&orderType=${params.orderType}&partnerCode=${params.partnerCode}&payType=${params.payType}&requestId=${params.requestId}&responseTime=${params.responseTime}&resultCode=${params.resultCode}&transId=${params.transId}`;
 
-	delete vnp_Params["vnp_SecureHash"];
-	delete vnp_Params["vnp_SecureHashType"];
+	var signature = crypto.createHmac("sha256", secretkey)
+		.update(rawSignature)
+		.digest("hex");
+	if (secureHash != signature) return cb("Checksum fail.");
 
-	vnp_Params = sortObject(vnp_Params);
-
-	let secretKey = process.env.VNP_HASHSECRET;
-	// Sign
-	let signData = querystring.stringify(vnp_Params, { encode: false });
-	let hmac = crypto.createHmac("sha512", secretKey);
-	let signed = hmac.update(new Buffer(signData, "utf-8")).digest("hex");
-	let orderId = vnp_Params["vnp_TxnRef"]
-
-	if (secureHash !== signed) return cb("Chữ ký không hợp lệ.");
-	// Verify payment status code
-	if (vnp_Params["vnp_ResponseCode"] !== "00") {
+	// Handle payment fail
+	if (resultCode != "0") {
 		// Payment fail then update status reservation to rejected
-		return _updatePaymentStatus(orderId, RESERVATION_STATUS.REJECTED, (error) => {
-			if (error) return cb(error);
-			return cb(getMessage(vnp_Params["vnp_ResponseCode"]));
+		return ReservationService.update(orderId, {
+			status: RESERVATION_STATUS.REJECTED,
+			reason: getMessage(resultCode),
+			'invoice.transId': transId
+		}).then(_ => {
+			return cb(getMessage(resultCode))
+		}, (error) => {
+			return cb(error)
 		})
 	}
-	// Update status reservation
-	Reservation.findOne({
-		orderId
-	}).then(reservation => {
-		if (!reservation) return cb(`Order id: ${orderId} not exist.`);
-
-		ReservationService.isReservationValid(reservation).then(() => {
-			return ReservationService.update(orderId, {
-				status: RESERVATION_STATUS.PENDING_COMPLETED
-			}).then(() => {
-				const html = nunjucks.render(
-					path.resolve("template", "payement_success.html"),
-					{
-						full_name: reservation?.invoice?.fullname,
-						phone: reservation?.invoice?.phone,
-						email: reservation?.invoice?.email,
-						order_id: orderId,
-						checkIn: `Check in sau ${process.env.CHECKIN} giờ ${moment(reservation.checkIn).format('DD-MM-YYY')}`,
-						checkOut: `Check out trước ${process.env.CHECKOUT} giờ ${moment(reservation.checkOut).format('DD-MM-YYY')}`,
-						totalPrice: `${reservation.totalPrice} VNĐ`
-					}
-				);
-				mailer.send(constants.confirmEmails.from, reservation?.invoice?.email, "Booking sucessfull.", html);
-
-				return cb(null, "Booking sucessfull.", reservation);
-			}, (error) => {
-				if (error) return cb(error);
-			})
-		}).catch(() => {
-			// Refund and Update status reservation to refunded
-			return ReservationService.update(orderId, {
-				status: RESERVATION_STATUS.REFUNDED,
-				reason: 'Your room occupy. We will refund your money. Please choose other room.'
-			}).then(() => {
-				return cb(`Your room occupy. We will refund your money. Please choose other room.`);
-			}, (error) => {
-				return cb(error);
-			})
+	// Handle payment sucessfull
+	let reservation = await Reservation.findOne({ orderId })
+	if (!reservation) return cb(`Order id: ${orderId} not exist.`);
+	// Verify rooms of reservation
+	ReservationService.isReservationValid(reservation).then(async () => {
+		await ReservationService.update(orderId, {
+			status: RESERVATION_STATUS.PENDING_COMPLETED,
+			'invoice.transId': transId
 		})
-	});
+		const html = nunjucks.render(
+			path.resolve("template", "payement_success.html"),
+			{
+				full_name: reservation?.invoice?.fullname,
+				phone: reservation?.invoice?.phone,
+				email: reservation?.invoice?.email,
+				order_id: orderId,
+				checkIn: `Check in sau ${process.env.CHECKIN} giờ ${moment(reservation.checkIn).format('DD-MM-YYY')}`,
+				checkOut: `Check out trước ${process.env.CHECKOUT} giờ ${moment(reservation.checkOut).format('DD-MM-YYY')}`,
+				totalPrice: `${reservation.totalPrice} VNĐ`
+			}
+		);
+		mailer.send(constants.confirmEmails.from, reservation?.invoice?.email, "Booking sucessfull.", html);
+
+		return cb(null, "Booking sucessfull.", reservation);
+	}).catch(async () => {
+		// Handle refund and Update status reservation to refunded
+		await ReservationService.update(orderId, {
+			status: RESERVATION_STATUS.REFUNDED,
+			'invoice.transId': transId,
+			reason: 'Rất tiếc phòng hiện tại đã hết. Chúng tối sẽ trả lại tiền cho bạn. Trong vòng 5p nếu không nhận được tiền vui lòng liên hệ 000000000 để được hỗ trợ.'
+		})
+		return cb('Rất tiếc phòng hiện tại đã hết. Chúng tối sẽ trả lại tiền cho bạn. Trong vòng 5p nếu không nhận được tiền vui lòng liên hệ 000000000 để được hỗ trợ.');
+	})
 };
 
 exports.cancelPayment = (req, cb) => {

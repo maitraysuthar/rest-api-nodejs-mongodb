@@ -1,6 +1,4 @@
 const { body, validationResult } = require("express-validator");
-const querystring = require("qs");
-const crypto = require("crypto");
 
 const { omitNullishObject } = require("../helpers/utility");
 const Reservation = require("../models/ReservationModel");
@@ -10,17 +8,13 @@ const { isSuperAdmin } = require("../helpers/user");
 const { getCheckInTimeToDate, getCheckOutTimeToDate } = require("../helpers/time");
 const ReservationService = require("../services/ReservationService");
 const { authAdmin } = require("../middlewares/role");
+const { sign } = require("../helpers/crypto");
 /**
  * Sign body
  */
 exports.sign = [
 	(req, res) => {
-		var secretKey = process.env.VNP_HASHSECRET;
-		let params = omitNullishObject(req.body);
-		// params = sortObject(params);
-		var signData = querystring.stringify(params, { encode: false });
-		var hmac = crypto.createHmac("sha512", secretKey);
-		var signed = hmac.update(signData).digest("hex");
+		let signed = sign(req.body);
 		return apiResponse.successResponseWithData(res, "Sign success!", signed);
 	}
 ];
@@ -38,16 +32,12 @@ exports.reservationStore = [
 		if (!errors.isEmpty()) {
 			return apiResponse.validationErrorWithData(res, errors.array()[0].msg, errors.array());
 		}
-		// CHECKSUM
-		var secretKey = process.env.VNP_HASHSECRET;
 		let params = { ...req.body };
 		let secureHash = req.body.secureHash;
 		delete params["secureHash"];
 		params = omitNullishObject(params);
 		// params = sortObject(params);
-		var signData = querystring.stringify(params, { encode: false });
-		var hmac = crypto.createHmac("sha512", secretKey);
-		var signed = hmac.update(signData).digest("hex");
+		let signed = sign(params);
 		if (signed == secureHash) {
 			const reservation = new Reservation(
 				omitNullishObject(

@@ -9,9 +9,9 @@ exports.getUrl = [
 	}
 ];
 
-exports.vnpReturn = [
+exports.ipn = [
 	(req, res) => {
-		PaymentService.paymentReturn(req.body, (error) => {
+		PaymentService.ipn(req.body, (error) => {
 			if (error) return apiResponse.ErrorResponse(res, error);
 			return apiResponse.successResponse(res, "Payment update successful.");
 		});
