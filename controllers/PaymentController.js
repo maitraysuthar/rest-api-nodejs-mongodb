@@ -3,8 +3,8 @@ const PaymentService = require("../services/PaymentService");
 const auth = require("../middlewares/jwt");
 const { authAdmin } = require("../middlewares/role");
 exports.getUrl = [
-	(req, res) => {
-		const url = PaymentService.getUrl(req);
+	async (req, res) => {
+		const url = await PaymentService.getUrl(req.body);
 		return apiResponse.successResponseWithData(res, "Success", url);
 	}
 ];

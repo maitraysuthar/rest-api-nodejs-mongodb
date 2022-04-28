@@ -1,6 +1,7 @@
 const moment = require("moment");
 const querystring = require("qs");
 const crypto = require("crypto");
+const axios = require('axios')
 const fs = require("fs");
 const path = require("path");
 const nunjucks = require("nunjucks");
@@ -16,59 +17,53 @@ const ReservationService = require('../services/ReservationService')
 const { isAllowCanceled } = require("../helpers/time");
 const nanoIdAlphabet = customAlphabet('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz', 6)
 
-exports.getUrl = (req) => {
-	const amount = req.body.amount;
-	var ipAddr = req.headers["x-forwarded-for"] ||
-		req.connection.remoteAddress ||
-		req.socket.remoteAddress ||
-		req.connection.socket.remoteAddress;
+exports.getUrl = async (body) => {
+	try {
+		let partnerCode = process.env.MOMO_PARTNER_CODE;
+		let accessKey = process.env.MOMO_ACCESS_KEY;
+		let secretkey = process.env.MOMO_SECRET_KEY;
 
-	var tmnCode = process.env.VNP_TMNCODE;
-	var secretKey = process.env.VNP_HASHSECRET;
-	var vnpUrl = process.env.VNP_URL;
-	var orderType = process.env.VNP_ORDER_TYPE;
-	var returnUrl = process.env.VNP_RETURN_URL;
+		let requestId = new Date().getTime()
+		let orderId = requestId;
+		let orderInfo = body.orderDescription;
+		let redirectUrl = process.env.MOMO_REDIRECT_URL;
+		let ipnUrl = process.env.MOMO_IPN_URL;
+		let amount = body.amount;
+		let requestType = "captureWallet";
+		let extraData = Buffer.from(JSON.stringify({
+			...body,
+			orderId
+		})).toString("base64"); //pass empty value if your merchant does not have stores
 
-	var date = moment(moment.now()).toDate();
+		let rawSignature = "accessKey=" + accessKey + "&amount=" + amount + "&extraData=" + extraData + "&ipnUrl=" + ipnUrl + "&orderId=" + orderId + "&orderInfo=" + orderInfo + "&partnerCode=" + partnerCode + "&redirectUrl=" + redirectUrl + "&requestId=" + requestId + "&requestType=" + requestType;
+		const crypto = require("crypto");
+		let signature = crypto.createHmac("sha256", secretkey)
+			.update(rawSignature)
+			.digest("hex");
 
-	var createDate = moment(date).format("YYYYMMDDHHmmss");
-	var orderId = nanoIdAlphabet();
-	var bankCode = req.body.bankCode;
+		//json object send to MoMo endpoint
+		const requestBody = {
+			partnerCode: partnerCode,
+			accessKey: accessKey,
+			requestId: requestId,
+			amount: amount,
+			orderId: orderId,
+			orderInfo: orderInfo,
+			redirectUrl: redirectUrl,
+			ipnUrl: ipnUrl,
+			extraData: extraData,
+			requestType: requestType,
+			signature: signature,
+			lang: "vi"
+		}
 
-	var orderInfo = req.body.orderDescription;
-	var locale = null;
-	if (locale == null || locale == "") {
-		locale = "vn";
+		//Create the HTTPS objects
+		const res = await axios.post(process.env.MOMO_HOST, requestBody)
+
+		return { ...res?.data, url: res?.data?.payUrl }
+	} catch (error) {
+		return Promise.reject(error?.message || error)
 	}
-	var currCode = "VND";
-	var vnp_Params = {};
-	vnp_Params["vnp_Version"] = "2.1.0";
-	vnp_Params["vnp_Command"] = "pay";
-	vnp_Params["vnp_TmnCode"] = tmnCode;
-	vnp_Params["vnp_Locale"] = locale;
-	vnp_Params["vnp_CurrCode"] = currCode;
-	vnp_Params["vnp_TxnRef"] = orderId;
-	vnp_Params["vnp_OrderInfo"] = orderInfo;
-	vnp_Params["vnp_OrderType"] = orderType;
-	vnp_Params["vnp_Amount"] = amount * 100;
-	vnp_Params["vnp_ReturnUrl"] = returnUrl;
-	vnp_Params["vnp_IpAddr"] = ipAddr;
-	vnp_Params["vnp_CreateDate"] = createDate;
-	if (bankCode != null && bankCode != "") {
-		vnp_Params["vnp_BankCode"] = bankCode;
-	}
-
-	vnp_Params = sortObject(vnp_Params);
-
-	var signData = querystring.stringify(vnp_Params, { encode: false });
-	var hmac = crypto.createHmac("sha512", secretKey);
-	var signed = hmac.update(signData).digest("hex");
-
-	vnp_Params["vnp_SecureHash"] = signed;
-
-	vnpUrl += "?" + querystring.stringify(vnp_Params, { encode: false });
-
-	return vnpUrl;
 };
 /**
  * Check order had exist
@@ -100,20 +95,20 @@ const _updatePaymentStatus = (orderId, status, cb) => {
 }
 
 exports.paymentReturn = (body, cb) => {
-	var vnp_Params = body;
+	let vnp_Params = body;
 
-	var secureHash = vnp_Params["vnp_SecureHash"];
+	let secureHash = vnp_Params["vnp_SecureHash"];
 
 	delete vnp_Params["vnp_SecureHash"];
 	delete vnp_Params["vnp_SecureHashType"];
 
 	vnp_Params = sortObject(vnp_Params);
 
-	var secretKey = process.env.VNP_HASHSECRET;
+	let secretKey = process.env.VNP_HASHSECRET;
 	// Sign
-	var signData = querystring.stringify(vnp_Params, { encode: false });
-	var hmac = crypto.createHmac("sha512", secretKey);
-	var signed = hmac.update(new Buffer(signData, "utf-8")).digest("hex");
+	let signData = querystring.stringify(vnp_Params, { encode: false });
+	let hmac = crypto.createHmac("sha512", secretKey);
+	let signed = hmac.update(new Buffer(signData, "utf-8")).digest("hex");
 	let orderId = vnp_Params["vnp_TxnRef"]
 
 	if (secureHash !== signed) return cb("Chữ ký không hợp lệ.");
@@ -168,18 +163,18 @@ exports.paymentReturn = (body, cb) => {
 };
 
 exports.cancelPayment = (req, cb) => {
-	var params = req.query;
+	let params = req.query;
 
-	var secureHash = params["secureHash"];
+	let secureHash = params["secureHash"];
 
 	delete params["secureHash"];
 
 
-	var secretKey = process.env.VNP_HASHSECRET;
+	let secretKey = process.env.VNP_HASHSECRET;
 
-	var signData = querystring.stringify(params, { encode: false });
-	var hmac = crypto.createHmac("sha512", secretKey);
-	var signed = hmac.update(new Buffer(signData, "utf-8")).digest("hex");
+	let signData = querystring.stringify(params, { encode: false });
+	let hmac = crypto.createHmac("sha512", secretKey);
+	let signed = hmac.update(new Buffer(signData, "utf-8")).digest("hex");
 
 	if (secureHash === signed) {
 		Reservation.findOne({
@@ -209,9 +204,9 @@ exports.refund = (req, cb) => {
 }
 
 function sortObject(obj) {
-	var sorted = {};
-	var str = [];
-	var key;
+	let sorted = {};
+	let str = [];
+	let key;
 	for (key in obj) {
 		if (obj.hasOwnProperty(key)) {
 			str.push(encodeURIComponent(key));

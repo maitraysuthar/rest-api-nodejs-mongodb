@@ -52,7 +52,12 @@ exports.isReservationValid = (reservation) => {
  * @param {*} reservation 
  * @param {*} cb 
  */
-exports.create = (reservation, cb) => {
+exports.create = async (reservation, cb) => {
+	// OrderId has valid
+	let isValidOrderId = await _isValidOrderId(reservation.orderId)
+	if (!isValidOrderId) {
+		return cb("Please try again.")
+	}
 	// Check valid rooms
 	Promise.all(reservation.rooms.map(r => {
 		return isRoomValid(r.roomId, reservation, r.amount)
@@ -131,4 +136,24 @@ exports.update = async (orderId, update) => {
 	} catch (error) {
 		return Promise.reject(error)
 	}
+}
+
+const _isValidOrderId = async (orderId) => {
+	let reservation = await Reservation.findOne({
+		orderId
+	})
+	return reservation == null
+}
+exports.createOrderId = async () => {
+	let orderId = new Date().getTime()
+	let isValid = await _isValidOrderId(orderId)
+	if (!isValid) {
+		// Recreate orderId
+		while (!isValid) {
+			console.info('retry', orderId)
+			orderId = new Date().getTime()
+			isValid = await _isValidOrderId(orderId)
+		}
+	}
+	return orderId
 }
