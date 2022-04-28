@@ -80,7 +80,9 @@ exports.reservationList = [
 				if (isSuperAdmin(req.user)) return apiResponse.successResponseWithData(res, "Operation success", reservations);
 
 				const resortIndex = Object.fromEntries(req.user.resort.map(key => [key, true]));
-				reservations = reservations.filter(e => resortIndex[e.roomtype.resort._id]);
+				reservations = reservations.filter(e => e.rooms.find(r => {
+					return resortIndex[r?.roomId?.resort?._id];
+				}));
 				return apiResponse.successResponseWithData(res, "Operation success", reservations);
 			} else {
 				return apiResponse.successResponseWithData(res, "Operation success", []);
