@@ -20,7 +20,7 @@ exports.getUrl = async (body) => {
 
 		let requestId = new Date().getTime()
 		let orderId = requestId;
-		let orderInfo = body.orderDescription;
+		let orderInfo = body.orderDescription || 'No note';
 		let redirectUrl = process.env.MOMO_REDIRECT_URL;
 		let ipnUrl = process.env.MOMO_IPN_URL;
 		let amount = body.amount;
