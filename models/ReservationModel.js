@@ -10,8 +10,11 @@ var InvoiceSchame = mongoose.Schema({
 	email: { type: String, required: true },
 	phone: { type: String, required: true },
 	message: { type: String },
-	transId: { type: String }
+	transId: { type: String },
+	adult: { type: Number },
+	children: { type: Number }
 });
+
 var History = mongoose.Schema({
 	rejectedTime: { type: Schema.Types.Mixed },
 	refundedTime: { type: Schema.Types.Mixed },
