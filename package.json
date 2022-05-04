@@ -32,7 +32,9 @@
     "nanoid": "^3.3.2",
     "node-cron": "^3.0.0",
     "nodemailer": "^6.3.1",
-    "nunjucks": "^3.2.3"
+    "nodemailer-plugin-inline-base64": "^2.1.1",
+    "nunjucks": "^3.2.3",
+    "qrcode": "^1.5.0"
   },
   "devDependencies": {
     "chai": "^4.2.0",

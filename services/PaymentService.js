@@ -4,6 +4,7 @@ const axios = require('axios')
 const path = require("path");
 const nunjucks = require("nunjucks");
 const { customAlphabet } = require('nanoid')
+const QRCode = require('qrcode')
 
 const mailer = require("../helpers/mailer");
 const { constants } = require("../helpers/constants");
@@ -100,19 +101,23 @@ exports.ipn = async (body, cb) => {
 			status: RESERVATION_STATUS.PENDING_COMPLETED,
 			'invoice.transId': transId
 		})
-		const html = nunjucks.render(
-			path.resolve("template", "payement_success.html"),
-			{
-				full_name: reservation?.invoice?.fullname,
-				phone: reservation?.invoice?.phone,
-				email: reservation?.invoice?.email,
-				order_id: orderId,
-				checkIn: `Check in sau ${process.env.CHECKIN} giờ ${moment(reservation.checkIn).format('DD-MM-YYY')}`,
-				checkOut: `Check out trước ${process.env.CHECKOUT} giờ ${moment(reservation.checkOut).format('DD-MM-YYY')}`,
-				totalPrice: `${reservation.totalPrice} VNĐ`
-			}
-		);
-		mailer.send(constants.confirmEmails.from, reservation?.invoice?.email, "Booking sucessfull.", html);
+		QRCode.toDataURL(orderId + "", function (err, url) {
+			const html = nunjucks.render(
+				path.resolve("template", "payement_success.html"),
+				{
+					full_name: reservation?.invoice?.fullname,
+					phone: reservation?.invoice?.phone,
+					email: reservation?.invoice?.email,
+					order_id: orderId,
+					checkIn: `Check in sau ${process.env.CHECKIN} giờ ${moment(reservation.checkIn).format('DD-MM-YYY')}`,
+					checkOut: `Check out trước ${process.env.CHECKOUT} giờ ${moment(reservation.checkOut).format('DD-MM-YYY')}`,
+					totalPrice: `${reservation.totalPrice} VNĐ`,
+					qrcode: url
+				}
+			);
+			mailer.send(constants.confirmEmails.from, reservation?.invoice?.email, "Booking sucessfull.", html);
+		})
+
 
 		return cb(null, "Booking sucessfull.", reservation);
 	}).catch(async () => {
