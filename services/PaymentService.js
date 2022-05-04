@@ -3,7 +3,6 @@ const crypto = require("crypto");
 const axios = require('axios')
 const path = require("path");
 const nunjucks = require("nunjucks");
-const { customAlphabet } = require('nanoid')
 const QRCode = require('qrcode')
 
 const mailer = require("../helpers/mailer");
