@@ -178,7 +178,7 @@ exports.cancel = async (body) => {
 	try {
 		const res = await PaymentService.refund(reservation, refundAmount)
 		await update(reservation.orderId, {
-			status: RESERVATION_STATUS.REFUNDED,
+			status: RESERVATION_STATUS.CANCELED,
 			reason: "Admin thực hiện refund và hủy."
 		})
 	} catch (error) {
