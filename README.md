@@ -1,3 +1,18 @@
+[![SonarCloud](https://sonarcloud.io/images/project_badges/sonarcloud-white.svg)](https://sonarcloud.io/summary/new_code?id=aliartiza75_rest-api-nodejs-mongodb)
+
+
+[![Quality gate](https://sonarcloud.io/api/project_badges/quality_gate?project=aliartiza75_rest-api-nodejs-mongodb)](https://sonarcloud.io/summary/new_code?id=aliartiza75_rest-api-nodejs-mongodb)
+
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=aliartiza75_rest-api-nodejs-mongodb&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=aliartiza75_rest-api-nodejs-mongodb)
+[![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=aliartiza75_rest-api-nodejs-mongodb&metric=ncloc)](https://sonarcloud.io/summary/new_code?id=aliartiza75_rest-api-nodejs-mongodb)
+[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=aliartiza75_rest-api-nodejs-mongodb&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=aliartiza75_rest-api-nodejs-mongodb)
+[![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=aliartiza75_rest-api-nodejs-mongodb&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=aliartiza75_rest-api-nodejs-mongodb)
+[![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=aliartiza75_rest-api-nodejs-mongodb&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=aliartiza75_rest-api-nodejs-mongodb)
+[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=aliartiza75_rest-api-nodejs-mongodb&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=aliartiza75_rest-api-nodejs-mongodb)
+[![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=aliartiza75_rest-api-nodejs-mongodb&metric=vulnerabilities)](https://sonarcloud.io/summary/new_code?id=aliartiza75_rest-api-nodejs-mongodb)
+
+
+
 # Nodejs Expressjs MongoDB Ready-to-use API Project Structure
 
 [![Author](http://img.shields.io/badge/author-@maitraysuthar-blue.svg)](https://www.linkedin.com/in/maitray-suthar/) [![GitHub license](https://img.shields.io/github/license/maitraysuthar/rest-api-nodejs-mongodb.svg)](https://github.com/maitraysuthar/rest-api-nodejs-mongodb/blob/master/LICENSE) ![GitHub repo size](https://img.shields.io/github/repo-size/maitraysuthar/rest-api-nodejs-mongodb) [![Codacy Badge](https://api.codacy.com/project/badge/Coverage/b3eb80984adc4671988ffb22d6ad83df)](https://www.codacy.com/manual/maitraysuthar/rest-api-nodejs-mongodb?utm_source=github.com&utm_medium=referral&utm_content=maitraysuthar/rest-api-nodejs-mongodb&utm_campaign=Badge_Coverage) [![Codacy Badge](https://api.codacy.com/project/badge/Grade/b3eb80984adc4671988ffb22d6ad83df)](https://www.codacy.com/manual/maitraysuthar/rest-api-nodejs-mongodb?utm_source=github.com&utm_medium=referral&utm_content=maitraysuthar/rest-api-nodejs-mongodb&utm_campaign=Badge_Grade) ![Travis (.com)](https://img.shields.io/travis/com/maitraysuthar/rest-api-nodejs-mongodb)
@@ -127,6 +142,20 @@ Press CTRL + C to stop the process.
 ```
 
 **Note:** `YOUR_DB_CONNECTION_STRING` will be your MongoDB connection string.
+
+## Running as Docker container
+
+1.  Build its image:
+
+```bash
+sudo docker build -t rest-api-nodejs-mongodb:0.0.1 -f build/package/Dockerfile .
+```
+
+2.  Run it as a container:
+
+```bash
+sudo docker run -it -e MONGODB_URL=mongodb://127.0.0.1:27017/rest-api-nodejs-mongodb -e JWT_SECRET=abc1235 -e JWT_TIMEOUT_DURATION="2 hours"  --net host api:0.0.1
+```
 
 ### Creating new models
 
