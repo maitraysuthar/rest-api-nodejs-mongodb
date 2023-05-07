@@ -1,0 +1,5 @@
+node_modules
+dev-*/*
+.git
+postman-collection
+public
