@@ -4,7 +4,7 @@ const { sanitizeBody } = require("express-validator");
 const apiResponse = require("../helpers/apiResponse");
 const auth = require("../middlewares/jwt");
 var mongoose = require("mongoose");
-mongoose.set("useFindAndModify", false);
+// mongoose.set("useFindAndModify", false);
 
 // Book Schema
 function BookData(data) {

@@ -1,0 +1,31 @@
+version: '3.4'
+services:
+  nodeserver:
+    container_name: rest-api-nodejs-mongodb
+    build:
+      context: ./
+      target: development
+    restart: unless-stopped
+    volumes:
+      - .:/home/node/
+      - /home/node/node_modules
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: development
+      MONGODB_URL: mongodb://mongo:27017/rest-api-nodejs-mongodb
+      DEBUG: nodejs-docker-express:*
+    depends_on:
+      - mongo
+
+  mongo:
+    container_name: rest-api-nodejs-db
+    image: mongo
+    restart: always
+    logging:
+      options:
+        max-size: 1g
+    environment:
+      MONGO_INITDB_DATABASE: rest-api-nodejs-mongodb
+    ports:
+      - "27017:27017"
